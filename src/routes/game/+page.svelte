@@ -77,7 +77,3 @@
     </div>
         <p class="mt-4 text-lg">Use Arrow Keys to play!</p>
 </div>
-
-<style>
-    /* No specific styles needed here as Tailwind CSS handles responsiveness */
-</style>
