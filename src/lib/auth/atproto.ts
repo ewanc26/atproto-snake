@@ -396,14 +396,14 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
         sessionStorage.setItem('atproto_oauth_state', JSON.stringify(oauthState));
 
         // Correct clientId and redirectUri setup
+        const canonicalClientId = "https://snake.ewancroft.uk/client-metadata.json";
         const origin = window.location.origin;
-        const clientId = `${origin}/client-metadata.json`;
         const redirectUri = `${origin}/auth/callback`;
 
         // Build authorization URL
         const authUrl = new URL(oauthConfig.authorization_endpoint);
         authUrl.searchParams.set('response_type', 'code');
-        authUrl.searchParams.set('client_id', clientId);
+        authUrl.searchParams.set('client_id', canonicalClientId);
         authUrl.searchParams.set('redirect_uri', redirectUri);
         authUrl.searchParams.set('scope', 'atproto'); // scope as string, not array
         authUrl.searchParams.set('code_challenge', codeChallenge);
@@ -439,7 +439,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     }
     
     // Exchange code for tokens
-    const clientId = `${window.location.origin}/client-metadata.json`;
+    const canonicalClientId = "https://snake.ewancroft.uk/client-metadata.json";
     const redirectUri = `${window.location.origin}/auth/callback`;
     
     const tokenResponse = await fetch(storedState.pdsInfo.tokenEndpoint, {
@@ -449,7 +449,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
         },
         body: new URLSearchParams({
             grant_type: 'authorization_code',
-            client_id: clientId,
+            client_id: canonicalClientId,
             code,
             redirect_uri: redirectUri,
             code_verifier: storedState.codeVerifier,
