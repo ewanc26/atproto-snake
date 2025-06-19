@@ -113,5 +113,5 @@
             </div>
         {/if}
     </div>
-        <p class="mt-4 text-lg">Use Arrow Keys to play!</p>
+        <p class="mt-4 text-lg">Use Arrow Keys or swipe to play!</p>
 </div>
