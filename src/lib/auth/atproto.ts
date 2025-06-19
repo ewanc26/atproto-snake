@@ -281,8 +281,7 @@ async function discoverOAuthEndpoints(pdsUrl: string) {
         const response = await fetch(wellKnownUrl, {
             method: 'GET',
             headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'ATProtoClient/1.0'
+                'Accept': 'application/json'
             },
             // Add timeout
             signal: AbortSignal.timeout(10000) // 10 second timeout
