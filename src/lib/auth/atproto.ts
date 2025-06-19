@@ -396,7 +396,7 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
         sessionStorage.setItem('atproto_oauth_state', JSON.stringify(oauthState));
         
         // Build authorization URL
-        const clientId = import.meta.env.PUBLIC_APP_URL || window.location.origin;
+        const clientId = window.location.origin;
         const redirectUri = `${clientId}/auth/callback`;
         
         const authUrl = new URL(oauthConfig.authorization_endpoint);
@@ -437,7 +437,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     }
     
     // Exchange code for tokens
-    const clientId = import.meta.env.PUBLIC_APP_URL || window.location.origin;
+    const clientId = window.location.origin;
     const redirectUri = `${clientId}/auth/callback`;
     
     const tokenResponse = await fetch(storedState.pdsInfo.tokenEndpoint, {
