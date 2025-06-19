@@ -1,38 +1,79 @@
-# sv
+# ATProto Snake Game
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A classic Snake game built with SvelteKit and integrated with the AT Protocol for user authentication.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+* **Classic Snake Gameplay**: Enjoy the timeless game of Snake.
+* **AT Protocol Authentication**: Log in using your AT Protocol handle (e.g., bsky.social).
+* **Responsive Design**: Play on various devices.
+* **SvelteKit Frontend**: Fast and modern user interface.
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Getting Started
 
-# create a new project in my-app
-npx sv create my-app
-```
+To get a local copy up and running, follow these simple steps.
 
-## Developing
+### Prerequisites
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+* Node.js (LTS recommended)
+* npm (comes with Node.js)
+
+### Installation
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/ewanc26/atproto-snake.git
+    cd atproto-snake
+    ```
+
+2. Install dependencies:
+
+    ```bash
+    npm install
+    ```
+
+### Running the Development Server
 
 ```bash
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+This will start the development server, usually at `http://localhost:5173`.
 
-To create a production version of your app:
+### Building for Production
 
 ```bash
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+This will create a `build` directory with the production-ready files.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## How to Play
+
+1. **Login**: Enter your AT Protocol handle (e.g., `yourhandle.bsky.social`) on the login page.
+2. **Start Game**: Once logged in, the game will start after a short countdown.
+3. **Controls**: Use the arrow keys (Up, Down, Left, Right) on your keyboard to control the snake. On touch devices, swipe in the desired direction.
+4. **Objective**: Guide the snake to eat the food (green squares) to grow longer and increase your score. Avoid hitting the walls or your own tail.
+5. **Game Over**: The game ends when the snake hits a wall or its own tail.
+
+**Note**: Future functionality will include saving your high score to the AT Protocol using the `uk.ewancroft.snake.score` lexicon.
+
+## Project Structure
+
+* `src/lib/auth/`: Contains all AT Protocol authentication logic.
+* `src/lib/snake/`: Core Snake game logic.
+* `src/routes/`: SvelteKit routes for different pages (login, game, callback).
+* `src/lib/components/`: Reusable Svelte components.
+* `static/client-metadata.json`: OAuth client metadata for AT Protocol.
+
+## Technologies Used
+
+* [SvelteKit](https://kit.svelte.dev/): Web framework for building the frontend.
+* [AT Protocol](https://atproto.com/): Decentralised social networking protocol for authentication.
+* [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework for styling.
+* [Vite](https://vitejs.dev/): Next-generation frontend tooling.
+
+## License
+
+This project is open-source and available under the MIT License.
