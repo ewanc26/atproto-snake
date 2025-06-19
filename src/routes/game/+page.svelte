@@ -39,8 +39,46 @@
             goto('/login'); // Redirect to login page if not logged in
         } else {
             startGame();
+            setupTouchControls();
         }
     });
+
+    /**
+     * Sets up touch controls for the game on the canvas.
+     */
+    function setupTouchControls() {
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        canvasElement.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        canvasElement.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal swipe
+                if (dx > 0) {
+                    game.changeDirection('right');
+                } else {
+                    game.changeDirection('left');
+                }
+            } else {
+                // Vertical swipe
+                if (dy > 0) {
+                    game.changeDirection('down');
+                } else {
+                    game.changeDirection('up');
+                }
+            }
+        });
+    }
 
     /**
      * Handles the logout process.
