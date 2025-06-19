@@ -398,7 +398,7 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
         // Correct clientId and redirectUri setup
         const origin = window.location.origin;
         const clientId = `${origin}/client-metadata.json`;
-        const redirectUri = `${origin}/auth/callback`; // FIXED here: do NOT append /auth/callback to client-metadata.json
+        const redirectUri = `${origin}/auth/callback`;
 
         // Build authorization URL
         const authUrl = new URL(oauthConfig.authorization_endpoint);
@@ -440,7 +440,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     
     // Exchange code for tokens
     const clientId = `${window.location.origin}/client-metadata.json`;
-    const redirectUri = `${clientId}/auth/callback`;
+    const redirectUri = `${window.location.origin}/auth/callback`;
     
     const tokenResponse = await fetch(storedState.pdsInfo.tokenEndpoint, {
         method: 'POST',
