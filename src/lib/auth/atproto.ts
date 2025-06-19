@@ -354,33 +354,33 @@ function base64urlencode(a: ArrayBuffer): string {
  */
 export async function initiateATProtoLogin(identifier: string): Promise<void> {
     if (!browser) return;
-    
+
     try {
         console.log('Starting AT Proto login for:', identifier);
-        
+
         // Clear any cached profile first to ensure fresh data
         const cacheKey = `profile_${identifier}`;
         localStorage.removeItem(cacheKey);
-        
+
         // Discover PDS and get profile
         const profile = await getProfile(identifier, fetch);
         console.log('Got profile:', profile);
-        
+
         if (!profile.pds) {
             throw new Error('Profile missing PDS URL');
         }
-        
+
         // Discover OAuth endpoints
         const oauthConfig = await discoverOAuthEndpoints(profile.pds);
         console.log('Got OAuth config:', oauthConfig);
-        
+
         // Generate PKCE challenge
         const codeVerifier = generateRandomString(128);
         const codeChallenge = base64urlencode(await sha256(codeVerifier));
-        
+
         // Generate state parameter
         const state = generateRandomString(32);
-        
+
         // Store OAuth state in sessionStorage
         const oauthState = {
             codeVerifier,
@@ -394,25 +394,27 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
             identifier
         };
         sessionStorage.setItem('atproto_oauth_state', JSON.stringify(oauthState));
-        
+
+        // Correct clientId and redirectUri setup
+        const origin = window.location.origin;
+        const clientId = `${origin}/client-metadata.json`;
+        const redirectUri = `${origin}/auth/callback`; // FIXED here: do NOT append /auth/callback to client-metadata.json
+
         // Build authorization URL
-        const clientId = `${window.location.origin}/client-metadata.json`;
-        const redirectUri = `${clientId}/auth/callback`;
-        
         const authUrl = new URL(oauthConfig.authorization_endpoint);
         authUrl.searchParams.set('response_type', 'code');
         authUrl.searchParams.set('client_id', clientId);
         authUrl.searchParams.set('redirect_uri', redirectUri);
-        authUrl.searchParams.set('scope', 'atproto');
+        authUrl.searchParams.set('scope', 'atproto'); // scope as string, not array
         authUrl.searchParams.set('code_challenge', codeChallenge);
         authUrl.searchParams.set('code_challenge_method', 'S256');
         authUrl.searchParams.set('state', state);
-        
+
         console.log('Redirecting to:', authUrl.toString());
-        
+
         // Redirect to authorization endpoint
         window.location.href = authUrl.toString();
-        
+
     } catch (error) {
         console.error('Failed to initiate AT Proto login:', error);
         throw error;
