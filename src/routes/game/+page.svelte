@@ -2,6 +2,8 @@
     import { onMount } from 'svelte';
     import { SnakeGame } from '$lib/snake/game';
     import { goto } from '$app/navigation';
+    import { isLoggedIn, logout } from '$lib/auth/auth';
+    import { setupTouchControls } from '$lib/utils/touchControls';
 
     let canvasElement: HTMLCanvasElement;
     let game: SnakeGame;
@@ -21,6 +23,7 @@
             if (countdown === 0) {
                 clearInterval(countdownInterval);
                 game = new SnakeGame(canvasElement, handleGameOver, updateScore);
+                setupTouchControls(canvasElement, game); // Moved here
                 game.startGame();
             }
         }, 1000);
@@ -42,66 +45,20 @@
     }
 
     onMount(() => {
-        // Check if the user is logged in
-        const loggedIn = localStorage.getItem('loggedIn');
-        if (!loggedIn) {
+        if (!isLoggedIn()) {
             goto('/login'); // Redirect to login page if not logged in
         } else {
             startGame();
-            setupTouchControls();
         }
     });
 
-    /**
-     * Sets up touch controls for the game on the canvas.
-     */
-    function setupTouchControls() {
-        let touchStartX = 0;
-        let touchStartY = 0;
 
-        canvasElement.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        }, { passive: false });
-
-        canvasElement.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-
-        canvasElement.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-
-            const dx = touchEndX - touchStartX;
-            const dy = touchEndY - touchStartY;
-
-            if (Math.abs(dx) > Math.abs(dy)) {
-                // Horizontal swipe
-                if (dx > 0) {
-                    game.changeDirection('right');
-                } else {
-                    game.changeDirection('left');
-                }
-            } else {
-                // Vertical swipe
-                if (dy > 0) {
-                    game.changeDirection('down');
-                } else {
-                    game.changeDirection('up');
-                }
-            }
-        });
-    }
 
     /**
      * Handles the logout process.
-     * Clears the 'loggedIn' flag from localStorage and redirects to the login page.
      */
     function handleLogout() {
-        localStorage.removeItem('loggedIn');
-        goto('/login');
+        logout();
     }
 </script>
 
