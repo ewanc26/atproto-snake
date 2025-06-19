@@ -1,29 +1,33 @@
 import { goto } from '$app/navigation';
+import { 
+    initiateATProtoLogin, 
+    isATProtoLoggedIn, 
+    logoutATProto, 
+    getATProtoSession,
+    refreshATProtoSession,
+    type ATProtoSession 
+} from './atproto';
 
 /**
- * Handles the login process.
- * @param username The username entered by the user.
- * @param password The password entered by the user.
- * @returns A promise that resolves to a boolean indicating login success.
+ * Handles the login process with AT Protocol
+ * @param identifier The AT Protocol handle or DID (e.g., user.bsky.social or did:plc:...)
+ * @returns A promise that resolves when login is initiated
  */
-export async function login(username: string, password: string): Promise<boolean> {
-    // Basic validation for demonstration purposes
-    if (username === 'user' && password === 'password') {
-        localStorage.setItem('loggedIn', 'true');
-        await goto('/'); // Redirect to the game page
-        return true;
-    } else {
-        return false;
+export async function login(identifier: string): Promise<void> {
+    try {
+        await initiateATProtoLogin(identifier);
+    } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
     }
 }
 
 /**
  * Handles the logout process.
- * Clears the 'loggedIn' flag from localStorage and redirects to the login page.
+ * Clears the AT Protocol session and redirects to the login page.
  */
 export function logout(): void {
-    localStorage.removeItem('loggedIn');
-    goto('/login');
+    logoutATProto();
 }
 
 /**
@@ -31,5 +35,30 @@ export function logout(): void {
  * @returns True if the user is logged in, false otherwise.
  */
 export function isLoggedIn(): boolean {
-    return localStorage.getItem('loggedIn') === 'true';
+    return isATProtoLoggedIn();
+}
+
+/**
+ * Gets the current user session
+ * @returns The current AT Protocol session or null if not logged in
+ */
+export function getCurrentSession(): ATProtoSession | null {
+    return getATProtoSession();
+}
+
+/**
+ * Refreshes the current session tokens
+ * @returns The refreshed session or null if refresh failed
+ */
+export async function refreshSession(): Promise<ATProtoSession | null> {
+    return await refreshATProtoSession();
+}
+
+/**
+ * Gets the current user's display name (handle)
+ * @returns The user's handle or null if not logged in
+ */
+export function getCurrentUserHandle(): string | null {
+    const session = getCurrentSession();
+    return session ? session.handle : null;
 }

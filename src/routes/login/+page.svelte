@@ -1,53 +1,129 @@
 <script lang="ts">
     import { login } from '$lib/auth/auth';
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    import { isLoggedIn } from '$lib/auth/auth';
 
-    let username = '';
-    let password = '';
+    let identifier = '';
     let errorMessage = '';
+    let isLoading = false;
+
+    onMount(() => {
+        // Redirect to game if already logged in
+        if (isLoggedIn()) {
+            goto('/game');
+        }
+    });
 
     /**
      * Handles the login form submission.
      */
     async function handleLogin(): Promise<void> {
-        errorMessage = ''; // Clear previous error messages
-        const success = await login(username, password);
-        if (!success) {
-            errorMessage = 'Invalid username or password.';
+        if (!identifier.trim()) {
+            errorMessage = 'Please enter your AT Protocol handle or DID.';
+            return;
+        }
+
+        errorMessage = '';
+        isLoading = true;
+
+        try {
+            await login(identifier.trim());
+            // The login function will redirect to OAuth, so we don't need to do anything else here
+        } catch (error) {
+            console.error('Login error:', error);
+            errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
+            isLoading = false;
+        }
+    }
+
+    function handleInputKeydown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            handleLogin();
         }
     }
 </script>
 
 <div class="flex flex-col items-center justify-center min-h-screen bg-gray-800 text-white">
-    <h1 class="text-4xl font-bold mb-8">Login</h1>
-    <form on:submit|preventDefault={handleLogin} class="bg-gray-700 p-8 rounded-lg shadow-lg w-96">
-        <div class="mb-4">
-            <label for="username" class="block text-lg font-medium mb-2">Username:</label>
-            <input
-                type="text"
-                id="username"
-                bind:value={username}
-                class="w-full p-3 rounded-md bg-gray-600 border border-gray-500 text-white focus:outline-none focus:border-green-500"
-                required
-            />
+    <div class="max-w-md w-full mx-4">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-4">Snake Game</h1>
+            <p class="text-gray-300">Sign in with your AT Protocol account</p>
         </div>
-        <div class="mb-6">
-            <label for="password" class="block text-lg font-medium mb-2">Password:</label>
-            <input
-                type="password"
-                id="password"
-                bind:value={password}
-                class="w-full p-3 rounded-md bg-gray-600 border border-gray-500 text-white focus:outline-none focus:border-green-500"
-                required
-            />
+
+        <div class="bg-gray-700 p-8 rounded-lg shadow-lg">
+            <form on:submit|preventDefault={handleLogin}>
+                <div class="mb-6">
+                    <label for="identifier" class="block text-lg font-medium mb-2">
+                        AT Protocol Handle or DID
+                    </label>
+                    <input
+                        type="text"
+                        id="identifier"
+                        bind:value={identifier}
+                        on:keydown={handleInputKeydown}
+                        placeholder="alice.bsky.social or did:plc:..."
+                        class="w-full p-3 rounded-md bg-gray-600 border border-gray-500 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                        disabled={isLoading}
+                        required
+                    />
+                    <p class="text-sm text-gray-400 mt-2">
+                        Enter your Bluesky handle (like alice.bsky.social) or any AT Protocol identifier.
+                    </p>
+                </div>
+
+                {#if errorMessage}
+                    <div class="mb-4 p-3 bg-red-900 border border-red-700 rounded-md">
+                        <p class="text-red-200 text-sm">{errorMessage}</p>
+                    </div>
+                {/if}
+
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow-lg transition duration-300 flex items-center justify-center"
+                >
+                    {#if isLoading}
+                        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Connecting...
+                    {:else}
+                        Sign In with AT Protocol
+                    {/if}
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-400">
+                    Don't have an account? 
+                    <a 
+                        href="https://bsky.app" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="text-green-400 hover:text-green-300 underline"
+                    >
+                        Sign up for Bluesky
+                    </a>
+                </p>
+            </div>
         </div>
-        {#if errorMessage}
-            <p class="text-red-400 mb-4">{errorMessage}</p>
-        {/if}
-        <button
-            type="submit"
-            class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition duration-300"
-        >
-            Login
-        </button>
-    </form>
+
+        <div class="mt-8 text-center">
+            <details class="text-sm text-gray-400">
+                <summary class="cursor-pointer hover:text-gray-300 mb-2">
+                    What is AT Protocol?
+                </summary>
+                <div class="text-left bg-gray-700 p-4 rounded-lg mt-2">
+                    <p class="mb-2">
+                        AT Protocol is a decentralized social networking protocol that powers Bluesky and other applications.
+                    </p>
+                    <p class="mb-2">
+                        You can use your existing Bluesky account, or any other AT Protocol identity to sign in.
+                    </p>
+                    <p>
+                        This game supports third-party Personal Data Servers (PDS), so you can use accounts from any AT Protocol provider.
+                    </p>
+                </div>
+            </details>
+        </div>
+    </div>
 </div>
