@@ -53,9 +53,11 @@
 </script>
 
 <div class="flex flex-col items-center justify-center min-h-screen bg-gray-800 text-white">
-    <button on:click={handleLogout} class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transition duration-300 absolute top-4 right-4">Logout</button>
-    <h1 class="text-4xl font-bold mb-8">Snake Game</h1>
-    <p class="text-2xl mb-4">Score: {score}</p>
+     <h1 class="text-4xl font-bold mb-8">Snake Game</h1>
+     <div class="flex items-center mb-4">
+         <p class="text-2xl mr-4">Score: {score}</p>
+         <button on:click={handleLogout} class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transition duration-300">Logout</button>
+     </div>
     <div class="relative">
         <canvas
             bind:this={canvasElement}
