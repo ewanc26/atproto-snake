@@ -12,6 +12,8 @@ export class SnakeGame {
     private gameLoopInterval: number | undefined;
     private currentDirection: Direction;
     private changingDirection: boolean;
+    private gracePeriodActive: boolean;
+    private gracePeriodTimer: number | undefined;
 
     /**
      * @param canvas The HTML canvas element to draw the game on.
@@ -27,6 +29,7 @@ export class SnakeGame {
         this.score = 0;
         this.currentDirection = 'right';
         this.changingDirection = false;
+        this.gracePeriodActive = false;
 
         this.food.generateNewPosition(this.snake.body);
 
@@ -48,8 +51,14 @@ export class SnakeGame {
         this.snake.move(this.currentDirection);
 
         if (this.checkCollision()) {
-            this.endGame();
-            return;
+            if (!this.gracePeriodActive) {
+                this.startGracePeriod();
+            } else {
+                this.endGame();
+                return;
+            }
+        } else if (this.gracePeriodActive) {
+            this.clearGracePeriod();
         }
 
         if (this.snake.head.x === this.food.position.x && this.snake.head.y === this.food.position.y) {
@@ -151,12 +160,34 @@ export class SnakeGame {
     }
 
     /**
+     * Starts the grace period for wall collisions.
+     */
+    private startGracePeriod(): void {
+        this.gracePeriodActive = true;
+        this.gracePeriodTimer = window.setTimeout(() => {
+            this.endGame();
+        }, 1000); // 1 second grace period
+    }
+
+    /**
+     * Clears the grace period if the snake moves away from the wall.
+     */
+    private clearGracePeriod(): void {
+        if (this.gracePeriodTimer) {
+            clearTimeout(this.gracePeriodTimer);
+            this.gracePeriodTimer = undefined;
+        }
+        this.gracePeriodActive = false;
+    }
+
+    /**
      * Ends the game, clearing the game loop interval.
      */
     private endGame(): void {
         if (this.gameLoopInterval) {
             clearInterval(this.gameLoopInterval);
         }
+        this.clearGracePeriod(); // Ensure grace period timer is cleared
         console.log('Game Over! Score:', this.score);
         alert(`Game Over! Your score: ${this.score}`);
     }
