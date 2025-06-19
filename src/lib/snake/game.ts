@@ -1,7 +1,7 @@
 import { Snake } from './snake';
 import { Food } from './food';
-import { GRID_SIZE, TILE_SIZE, INITIAL_SNAKE_SPEED } from './constants';
-import type { Position, Direction } from './types';
+import { GRID_SIZE, TILE_SIZE, INITIAL_SNAKE_SPEED, SNAKE_SEGMENT_SIZE } from './constants';
+import type { Direction } from './types';
 
 export class SnakeGame {
     private canvas: HTMLCanvasElement;
@@ -85,8 +85,14 @@ export class SnakeGame {
      */
     private drawSnake(): void {
         this.ctx.fillStyle = 'lime';
+        const offset = (TILE_SIZE - SNAKE_SEGMENT_SIZE) / 2;
         this.snake.body.forEach(segment => {
-            this.ctx.fillRect(segment.x * TILE_SIZE, segment.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            this.ctx.fillRect(
+                segment.x * TILE_SIZE + offset,
+                segment.y * TILE_SIZE + offset,
+                SNAKE_SEGMENT_SIZE,
+                SNAKE_SEGMENT_SIZE
+            );
         });
     }
 
