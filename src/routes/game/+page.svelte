@@ -58,10 +58,10 @@
          <p class="text-2xl mr-4">Score: {score}</p>
          <button on:click={handleLogout} class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transition duration-300">Logout</button>
      </div>
-    <div class="relative">
+    <div class="relative w-full max-w-md mx-auto">
         <canvas
             bind:this={canvasElement}
-            class="border-4 border-green-500 bg-gray-900 {isGameOver ? 'hidden' : ''}"
+            class="border-4 border-green-500 bg-gray-900 w-full aspect-square {isGameOver ? 'hidden' : ''}"
         ></canvas>
         {#if isGameOver}
             <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-75 text-white">
@@ -79,8 +79,5 @@
 </div>
 
 <style>
-    canvas {
-        display: block;
-        margin: 0 auto;
-    }
+    /* No specific styles needed here as Tailwind CSS handles responsiveness */
 </style>
