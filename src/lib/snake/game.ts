@@ -36,6 +36,31 @@ export class SnakeGame {
     }
 
     /**
+     * Changes the direction of the snake based on user input.
+     * @param newDirection The new direction ('up', 'down', 'left', 'right').
+     */
+    public changeDirection(newDirection: Direction): void {
+        if (this.changingDirection) return;
+
+        this.changingDirection = true;
+
+        const goingUp = this.currentDirection === 'up';
+        const goingDown = this.currentDirection === 'down';
+        const goingLeft = this.currentDirection === 'left';
+        const goingRight = this.currentDirection === 'right';
+
+        if (newDirection === 'left' && !goingRight) {
+            this.currentDirection = 'left';
+        } else if (newDirection === 'up' && !goingDown) {
+            this.currentDirection = 'up';
+        } else if (newDirection === 'right' && !goingLeft) {
+            this.currentDirection = 'right';
+        } else if (newDirection === 'down' && !goingUp) {
+            this.currentDirection = 'down';
+        }
+    }
+
+    /**
      * Starts the game loop.
      */
     startGame(): void {
@@ -119,24 +144,26 @@ export class SnakeGame {
      * Handles keyboard input to change snake direction.
      * @param event The keyboard event.
      */
+    /**
+     * Handles keyboard input to change snake direction.
+     * @param event The keyboard event.
+     */
     private handleKeyPress(event: KeyboardEvent): void {
-        if (this.changingDirection) return;
-        this.changingDirection = true;
-
         const keyPressed = event.key;
-        const goingUp = this.currentDirection === 'up';
-        const goingDown = this.currentDirection === 'down';
-        const goingLeft = this.currentDirection === 'left';
-        const goingRight = this.currentDirection === 'right';
+        let direction: Direction | undefined;
 
-        if (keyPressed === 'ArrowLeft' && !goingRight) {
-            this.currentDirection = 'left';
-        } else if (keyPressed === 'ArrowUp' && !goingDown) {
-            this.currentDirection = 'up';
-        } else if (keyPressed === 'ArrowRight' && !goingLeft) {
-            this.currentDirection = 'right';
-        } else if (keyPressed === 'ArrowDown' && !goingUp) {
-            this.currentDirection = 'down';
+        if (keyPressed === 'ArrowLeft') {
+            direction = 'left';
+        } else if (keyPressed === 'ArrowUp') {
+            direction = 'up';
+        } else if (keyPressed === 'ArrowRight') {
+            direction = 'right';
+        } else if (keyPressed === 'ArrowDown') {
+            direction = 'down';
+        }
+
+        if (direction) {
+            this.changeDirection(direction);
         }
     }
 
