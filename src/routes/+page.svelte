@@ -1,10 +1,10 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
+    import { isLoggedIn } from '$lib/auth/auth';
 
     onMount(() => {
-        const loggedIn = localStorage.getItem('loggedIn');
-        if (!loggedIn) {
+        if (!isLoggedIn()) {
             goto('/login');
         } else {
             goto('/game');
