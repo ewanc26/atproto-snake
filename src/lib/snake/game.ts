@@ -15,12 +15,14 @@ export class SnakeGame {
     private gracePeriodActive: boolean;
     private gracePeriodTimer: number | undefined;
     private onGameOverCallback: () => void;
+    private onScoreUpdateCallback: (score: number) => void;
 
     /**
      * @param canvas The HTML canvas element to draw the game on.
      * @param onGameOverCallback Callback function to be called when the game ends.
+     * @param onScoreUpdateCallback Callback function to be called when the score updates.
      */
-    constructor(canvas: HTMLCanvasElement, onGameOverCallback: () => void) {
+    constructor(canvas: HTMLCanvasElement, onGameOverCallback: () => void, onScoreUpdateCallback: (score: number) => void) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d')!;
         this.canvas.width = GRID_SIZE * TILE_SIZE;
@@ -33,6 +35,7 @@ export class SnakeGame {
         this.changingDirection = false;
         this.gracePeriodActive = false;
         this.onGameOverCallback = onGameOverCallback;
+        this.onScoreUpdateCallback = onScoreUpdateCallback;
 
         this.food.generateNewPosition(this.snake.body);
 
@@ -67,6 +70,7 @@ export class SnakeGame {
         if (this.snake.head.x === this.food.position.x && this.snake.head.y === this.food.position.y) {
             this.snake.grow();
             this.score += 1;
+            this.onScoreUpdateCallback(this.score);
             this.food.generateNewPosition(this.snake.body);
         }
 
@@ -80,7 +84,6 @@ export class SnakeGame {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawSnake();
         this.drawFood();
-        this.drawScore();
     }
 
     /**
@@ -115,9 +118,7 @@ export class SnakeGame {
      * Draws the current score on the canvas.
      */
     private drawScore(): void {
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '20px Arial';
-        this.ctx.fillText(`Score: ${this.score}`, 10, 25);
+        // Score is now displayed in the Svelte component, so no need to draw it on canvas
     }
 
     /**
