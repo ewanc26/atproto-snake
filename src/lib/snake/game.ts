@@ -1,11 +1,11 @@
 import { Snake } from './snake';
 import { Food } from './food';
-import { GRID_SIZE, TILE_SIZE, INITIAL_SNAKE_SPEED, SNAKE_SEGMENT_SIZE } from './constants';
+import { INITIAL_SNAKE_SPEED, GRID_SIZE } from './constants';
 import type { Direction } from './types';
+import { GameRenderer } from './renderer';
 
 export class SnakeGame {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
+    private renderer: GameRenderer;
     private snake!: Snake;
     private food!: Food;
     private score!: number;
@@ -23,10 +23,7 @@ export class SnakeGame {
      * @param onScoreUpdateCallback Callback function to be called when the score updates.
      */
     constructor(canvas: HTMLCanvasElement, onGameOverCallback: () => void, onScoreUpdateCallback: (score: number) => void) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d')!;
-        this.canvas.width = GRID_SIZE * TILE_SIZE;
-        this.canvas.height = GRID_SIZE * TILE_SIZE;
+        this.renderer = new GameRenderer(canvas);
 
         this.onGameOverCallback = onGameOverCallback;
         this.onScoreUpdateCallback = onScoreUpdateCallback;
@@ -100,44 +97,7 @@ export class SnakeGame {
      * Draws all game elements on the canvas.
      */
     private draw(): void {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.drawSnake();
-        this.drawFood();
-    }
-
-    /**
-     * Draws the snake on the canvas.
-     */
-    private drawSnake(): void {
-        const offset = (TILE_SIZE - SNAKE_SEGMENT_SIZE) / 2;
-        this.snake.body.forEach((segment, index) => {
-            if (index === 0) {
-                this.ctx.fillStyle = '#006400'; // Darker green for the head
-            } else {
-                this.ctx.fillStyle = 'lime';
-            }
-            this.ctx.fillRect(
-                segment.x * TILE_SIZE + offset,
-                segment.y * TILE_SIZE + offset,
-                SNAKE_SEGMENT_SIZE,
-                SNAKE_SEGMENT_SIZE
-            );
-        });
-    }
-
-    /**
-     * Draws the food on the canvas.
-     */
-    private drawFood(): void {
-        this.ctx.fillStyle = 'red';
-        this.ctx.fillRect(this.food.position.x * TILE_SIZE, this.food.position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    }
-
-    /**
-     * Draws the current score on the canvas.
-     */
-    private drawScore(): void {
-        // Score is now displayed in the Svelte component, so no need to draw it on canvas
+        this.renderer.draw(this.snake, this.food);
     }
 
     /**
@@ -224,12 +184,7 @@ export class SnakeGame {
             window.clearInterval(this.gameLoopInterval);
             this.gameLoopInterval = undefined; // Clear the interval ID
         }
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '30px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Game Over!', this.canvas.width / 2, this.canvas.height / 2 - 20);
-        this.ctx.fillText(`Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 + 20);
+        this.renderer.drawGameOver(this.score);
         this.clearGracePeriod();
         this.onGameOverCallback();
     }
@@ -251,6 +206,6 @@ export class SnakeGame {
         this.clearGracePeriod();
         this.food.generateNewPosition(this.snake.body);
         this.onScoreUpdateCallback(this.score); // Update score display on reset
-        this.draw(); // Draw initial state
+        this.renderer.draw(this.snake, this.food); // Draw initial state
     }
 }
