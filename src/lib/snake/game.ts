@@ -14,11 +14,13 @@ export class SnakeGame {
     private changingDirection: boolean;
     private gracePeriodActive: boolean;
     private gracePeriodTimer: number | undefined;
+    private onGameOverCallback: () => void;
 
     /**
      * @param canvas The HTML canvas element to draw the game on.
+     * @param onGameOverCallback Callback function to be called when the game ends.
      */
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, onGameOverCallback: () => void) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d')!;
         this.canvas.width = GRID_SIZE * TILE_SIZE;
@@ -30,6 +32,7 @@ export class SnakeGame {
         this.currentDirection = 'right';
         this.changingDirection = false;
         this.gracePeriodActive = false;
+        this.onGameOverCallback = onGameOverCallback;
 
         this.food.generateNewPosition(this.snake.body);
 
@@ -162,6 +165,7 @@ export class SnakeGame {
         // Self-collision
         for (let i = 1; i < this.snake.body.length; i++) {
             if (head.x === this.snake.body[i].x && head.y === this.snake.body[i].y) {
+                this.endGame(); // End game immediately on self-collision
                 return true;
             }
         }
@@ -195,10 +199,15 @@ export class SnakeGame {
      */
     private endGame(): void {
         if (this.gameLoopInterval) {
-            clearInterval(this.gameLoopInterval);
+            window.clearInterval(this.gameLoopInterval);
         }
-        this.clearGracePeriod(); // Ensure grace period timer is cleared
-        console.log('Game Over! Score:', this.score);
-        alert(`Game Over! Your score: ${this.score}`);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '30px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('Game Over!', this.canvas.width / 2, this.canvas.height / 2 - 20);
+        this.ctx.fillText(`Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 + 20);
+        this.clearGracePeriod();
+        this.onGameOverCallback();
     }
 }
