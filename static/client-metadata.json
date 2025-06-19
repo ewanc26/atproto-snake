@@ -4,6 +4,6 @@
     "https://atproto-snake.vercel.app/auth/callback",
     "https://snake.ewancroft.uk/auth/callback"
   ],
-  "scope": ["atproto"],
+  "scope": "atproto",
   "token_endpoint_auth_method": "none"
 }
