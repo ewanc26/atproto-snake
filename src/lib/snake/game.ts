@@ -16,6 +16,7 @@ export class SnakeGame {
     private gracePeriodTimer: number | undefined;
     private onGameOverCallback: () => void;
     private onScoreUpdateCallback: (score: number) => void;
+    private isAnimatingDeath: boolean = false;
 
     /**
      * @param canvas The HTML canvas element to draw the game on.
@@ -69,6 +70,10 @@ export class SnakeGame {
      * The main game loop, responsible for updating game state and rendering.
      */
     private gameLoop(): void {
+        if (this.isAnimatingDeath) {
+            return; // Do not update game state during death animation
+        }
+
         this.changingDirection = false;
         this.snake.move(this.currentDirection);
 
@@ -184,9 +189,33 @@ export class SnakeGame {
             window.clearInterval(this.gameLoopInterval);
             this.gameLoopInterval = undefined; // Clear the interval ID
         }
-        this.renderer.drawGameOver(this.score);
         this.clearGracePeriod();
-        this.onGameOverCallback();
+        this.isAnimatingDeath = true;
+        this.animateDeath();
+    }
+
+    /**
+     * Resets the game to its initial state.
+     */
+    /**
+     * Animates the snake's death by progressively removing segments.
+     */
+    private animateDeath(): void {
+        const segmentCount = this.snake.body.length;
+        let segmentsRemoved = 0;
+
+        const animationInterval = window.setInterval(() => {
+            if (segmentsRemoved < segmentCount) {
+                this.snake.body.pop(); // Remove one segment
+                this.draw(); // Redraw the game to show the segment removal
+                segmentsRemoved++;
+            } else {
+                window.clearInterval(animationInterval);
+                this.isAnimatingDeath = false;
+                this.renderer.drawGameOver(this.score);
+                this.onGameOverCallback();
+            }
+        }, 125); // 0.125 seconds delay per segment
     }
 
     /**
