@@ -7,14 +7,23 @@
     let game: SnakeGame;
     let isGameOver = false;
     let score = 0;
+    let countdown = 0; // New state for countdown
 
     /**
-     * Initialises and starts a new game.
+     * Initialises and starts a new game with a countdown.
      */
     function startGame(): void {
         isGameOver = false;
-        game = new SnakeGame(canvasElement, handleGameOver, updateScore);
-        game.startGame();
+        countdown = 3; // Start countdown from 3
+
+        const countdownInterval = setInterval(() => {
+            countdown -= 1;
+            if (countdown === 0) {
+                clearInterval(countdownInterval);
+                game = new SnakeGame(canvasElement, handleGameOver, updateScore);
+                game.startGame();
+            }
+        }, 1000);
     }
 
     /**
@@ -97,7 +106,7 @@
 </script>
 
 <div class="flex flex-col items-center justify-center min-h-screen bg-gray-800 text-white">
-     {#if !isGameOver}
+     {#if !isGameOver && countdown === 0}
         <h1 class="text-4xl font-bold mb-8">Snake Game</h1>
      {/if}
      {#if !isGameOver}
@@ -107,21 +116,25 @@
         </div>
      {/if}
     <div class="relative w-full max-w-md mx-auto">
-        <canvas
-            bind:this={canvasElement}
-            class="border-4 border-green-500 bg-gray-900 w-full aspect-square {isGameOver ? 'hidden' : ''}"
-        ></canvas>
-        {#if isGameOver}
-            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-75 text-white">
-                <h2 class="text-3xl font-bold mb-4">Game Over!</h2>
-                <button
-                    on:click={startGame}
-                    class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition duration-300"
-                >
-                    Play Again
-                </button>
-            </div>
-        {/if}
+        {#if countdown > 0}
+             <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-75 text-white">
+                 <h2 class="text-5xl font-bold">{countdown}</h2>
+             </div>
+         {:else if isGameOver}
+             <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-75 text-white">
+                 <h2 class="text-3xl font-bold mb-4">Game Over!</h2>
+                 <button
+                     on:click={startGame}
+                     class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition duration-300"
+                 >
+                     Play Again
+                 </button>
+             </div>
+         {/if}
+         <canvas
+             bind:this={canvasElement}
+             class="border-4 border-green-500 bg-gray-900 w-full aspect-square {isGameOver || countdown > 0 ? 'hidden' : ''}"
+         ></canvas>
     </div>
         {#if !isGameOver}
             <p class="mt-4 text-lg">Use Arrow Keys or swipe to play!</p>
