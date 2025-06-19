@@ -84,9 +84,13 @@ export class SnakeGame {
      * Draws the snake on the canvas.
      */
     private drawSnake(): void {
-        this.ctx.fillStyle = 'lime';
         const offset = (TILE_SIZE - SNAKE_SEGMENT_SIZE) / 2;
-        this.snake.body.forEach(segment => {
+        this.snake.body.forEach((segment, index) => {
+            if (index === 0) {
+                this.ctx.fillStyle = '#006400'; // Darker green for the head
+            } else {
+                this.ctx.fillStyle = 'lime';
+            }
             this.ctx.fillRect(
                 segment.x * TILE_SIZE + offset,
                 segment.y * TILE_SIZE + offset,
