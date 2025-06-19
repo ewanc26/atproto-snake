@@ -6,13 +6,13 @@ import type { Direction } from './types';
 export class SnakeGame {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
-    private snake: Snake;
-    private food: Food;
-    private score: number;
+    private snake!: Snake;
+    private food!: Food;
+    private score!: number;
     private gameLoopInterval: number | undefined;
-    private currentDirection: Direction;
-    private changingDirection: boolean;
-    private gracePeriodActive: boolean;
+    private currentDirection!: Direction;
+    private changingDirection!: boolean;
+    private gracePeriodActive!: boolean;
     private gracePeriodTimer: number | undefined;
     private onGameOverCallback: () => void;
     private onScoreUpdateCallback: (score: number) => void;
@@ -28,24 +28,18 @@ export class SnakeGame {
         this.canvas.width = GRID_SIZE * TILE_SIZE;
         this.canvas.height = GRID_SIZE * TILE_SIZE;
 
-        this.snake = new Snake();
-        this.food = new Food();
-        this.score = 0;
-        this.currentDirection = 'right';
-        this.changingDirection = false;
-        this.gracePeriodActive = false;
         this.onGameOverCallback = onGameOverCallback;
         this.onScoreUpdateCallback = onScoreUpdateCallback;
 
-        this.food.generateNewPosition(this.snake.body);
-
         document.addEventListener('keydown', this.handleKeyPress.bind(this));
+        this.resetGame();
     }
 
     /**
      * Starts the game loop.
      */
     startGame(): void {
+        this.resetGame();
         this.gameLoopInterval = window.setInterval(() => this.gameLoop(), INITIAL_SNAKE_SPEED);
     }
 
@@ -201,6 +195,7 @@ export class SnakeGame {
     private endGame(): void {
         if (this.gameLoopInterval) {
             window.clearInterval(this.gameLoopInterval);
+            this.gameLoopInterval = undefined; // Clear the interval ID
         }
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = 'white';
@@ -210,5 +205,25 @@ export class SnakeGame {
         this.ctx.fillText(`Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 + 20);
         this.clearGracePeriod();
         this.onGameOverCallback();
+    }
+
+    /**
+     * Resets the game to its initial state.
+     */
+    private resetGame(): void {
+        if (this.gameLoopInterval) {
+            window.clearInterval(this.gameLoopInterval);
+            this.gameLoopInterval = undefined;
+        }
+        this.snake = new Snake();
+        this.food = new Food();
+        this.score = 0;
+        this.currentDirection = 'right';
+        this.changingDirection = false;
+        this.gracePeriodActive = false;
+        this.clearGracePeriod();
+        this.food.generateNewPosition(this.snake.body);
+        this.onScoreUpdateCallback(this.score); // Update score display on reset
+        this.draw(); // Draw initial state
     }
 }
