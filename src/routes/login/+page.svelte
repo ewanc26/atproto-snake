@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
+    import { login } from '$lib/auth/auth';
 
     let username = '';
     let password = '';
@@ -8,12 +8,10 @@
     /**
      * Handles the login form submission.
      */
-    function handleLogin(): void {
-        // Basic validation for demonstration purposes
-        if (username === 'user' && password === 'password') {
-            localStorage.setItem('loggedIn', 'true');
-            goto('/'); // Redirect to the game page
-        } else {
+    async function handleLogin(): Promise<void> {
+        errorMessage = ''; // Clear previous error messages
+        const success = await login(username, password);
+        if (!success) {
             errorMessage = 'Invalid username or password.';
         }
     }
