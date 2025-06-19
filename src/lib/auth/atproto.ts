@@ -32,18 +32,29 @@ function getCache<T>(key: string): T | null {
     const item = localStorage.getItem(key);
     if (item) {
         try {
-            return JSON.parse(item) as T;
+            const parsed = JSON.parse(item);
+            // Check if cached item has expiry and if it's still valid
+            if (parsed.expiry && Date.now() > parsed.expiry) {
+                localStorage.removeItem(key);
+                return null;
+            }
+            return parsed.data || parsed;
         } catch (e) {
             console.error("Error parsing cache for key", key, e);
+            localStorage.removeItem(key);
             return null;
         }
     }
     return null;
 }
 
-function setCache<T>(key: string, value: T): void {
+function setCache<T>(key: string, value: T, ttlMs: number = 3600000): void { // 1 hour default TTL
     if (!browser) return;
-    localStorage.setItem(key, JSON.stringify(value));
+    const cacheItem = {
+        data: value,
+        expiry: Date.now() + ttlMs
+    };
+    localStorage.setItem(key, JSON.stringify(cacheItem));
 }
 
 export interface ATProtoSession {
@@ -90,46 +101,159 @@ export async function getProfile(identifier: string, fetcher: typeof globalThis.
     let profile: Profile | null = getCache<Profile>(cacheKey);
 
     if (profile) {
+        console.log('Using cached profile for:', identifier);
         return profile;
     }
 
     try {
+        console.log(`Fetching profile for identifier: ${identifier}`);
+        
         const fetchProfile = await safeFetch(
             `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${identifier}`,
             fetcher
         );
-        const split = fetchProfile["did"].split(":");
+        
+        const did = fetchProfile["did"];
+        if (!did) {
+            throw new Error("Profile missing DID");
+        }
+        
+        console.log(`Got DID: ${did}`);
+        
+        // Parse DID and fetch DID document
+        const split = did.split(":");
+        if (split.length < 3 || split[0] !== "did") {
+            throw new Error(`Invalid DID format: ${did}`);
+        }
+        
         let diddoc;
-        if (split[0] === "did") {
-            if (split[1] === "plc") {
-                diddoc = await safeFetch(`https://plc.directory/${fetchProfile["did"]}`, fetcher);
-            } else if (split[1] === "web") {
-                diddoc = await safeFetch("https://" + split[2] + "/.well-known/did.json", fetcher);
-            }
+        const didMethod = split[1];
+        
+        if (didMethod === "plc") {
+            console.log(`Fetching PLC DID document for: ${did}`);
+            diddoc = await safeFetch(`https://plc.directory/${did}`, fetcher);
+        } else if (didMethod === "web") {
+            const domain = split[2];
+            console.log(`Fetching Web DID document for domain: ${domain}`);
+            diddoc = await safeFetch(`https://${domain}/.well-known/did.json`, fetcher);
         } else {
-            throw new Error("Invalid DID, malformed");
+            throw new Error(`Unsupported DID method: ${didMethod}`);
         }
-        let pdsurl;
-        for (const service of diddoc["service"]) {
-            if (service["id"] === "#atproto_pds") {
-                pdsurl = service["serviceEndpoint"];
+        
+        if (!diddoc) {
+            throw new Error("Failed to fetch DID document");
+        }
+        
+        console.log("DID document fetched:", JSON.stringify(diddoc, null, 2));
+        
+        if (!diddoc.service || !Array.isArray(diddoc.service)) {
+            throw new Error("DID document missing or invalid service array");
+        }
+        
+        // Look for AT Protocol PDS service - enhanced service detection
+        let pdsurl: string | undefined;
+        
+        // Try multiple service detection approaches
+        for (const service of diddoc.service) {
+            console.log(`Checking service:`, service);
+            
+            // Check for various service ID formats and types
+            const isAtProtoPDS = 
+                service.id === "#atproto_pds" || 
+                service.id === "atproto_pds" ||
+                service.id === "#atproto" ||
+                service.type === "AtprotoPersonalDataServer" ||
+                (service.type === "PersonalDataServer" && service.id?.includes("atproto"));
+            
+            if (isAtProtoPDS) {
+                let endpoint = service.serviceEndpoint;
+                
+                // Handle different serviceEndpoint formats
+                if (typeof endpoint === 'string') {
+                    pdsurl = endpoint;
+                } else if (Array.isArray(endpoint) && endpoint.length > 0) {
+                    pdsurl = typeof endpoint[0] === 'string' ? endpoint[0] : endpoint[0]?.uri;
+                } else if (endpoint && typeof endpoint === 'object' && endpoint.uri) {
+                    pdsurl = endpoint.uri;
+                }
+                
+                if (pdsurl) {
+                    console.log(`Found PDS URL: ${pdsurl} from service:`, service);
+                    break;
+                }
             }
         }
+        
+        // Fallback: look for any service that might be a PDS
         if (!pdsurl) {
-            throw new Error("DID lacks #atproto_pds service");
+            console.log("Primary PDS detection failed, trying fallback methods...");
+            
+            // Try to find any service with a reasonable endpoint
+            for (const service of diddoc.service) {
+                if (service.serviceEndpoint && typeof service.serviceEndpoint === 'string') {
+                    // Check if it looks like a PDS URL (contains common PDS hostnames)
+                    const endpoint = service.serviceEndpoint;
+                    if (endpoint.includes('bsky.social') || 
+                        endpoint.includes('pds') || 
+                        endpoint.includes('atproto') ||
+                        (endpoint.startsWith('https://') && !endpoint.includes('did:web'))) {
+                        pdsurl = endpoint;
+                        console.log(`Using fallback PDS URL: ${pdsurl} from service:`, service);
+                        break;
+                    }
+                }
+            }
         }
+        
+        // Final fallback for common cases
+        if (!pdsurl && identifier.endsWith('.bsky.social')) {
+            pdsurl = 'https://bsky.social';
+            console.log('Using default bsky.social PDS for bsky.social handle');
+        }
+        
+        if (!pdsurl) {
+            console.error("No PDS URL found. Available services:", 
+                diddoc.service.map((s: any) => ({ 
+                    id: s.id, 
+                    type: s.type, 
+                    serviceEndpoint: s.serviceEndpoint 
+                }))
+            );
+            throw new Error("Could not determine PDS URL from DID document. No AT Protocol PDS service found.");
+        }
+        
+        // Clean and validate PDS URL
+        pdsurl = pdsurl.replace(/\/$/, ''); // Remove trailing slash
+        
+        // Validate PDS URL format
+        try {
+            const url = new URL(pdsurl);
+            if (!url.protocol.startsWith('http')) {
+                throw new Error('PDS URL must use HTTP or HTTPS');
+            }
+        } catch (urlError) {
+            throw new Error(`Invalid PDS URL format: ${pdsurl}`);
+        }
+        
         profile = {
-            avatar: fetchProfile["avatar"],
-            banner: fetchProfile["banner"],
-            displayName: fetchProfile["displayName"],
-            did: fetchProfile["did"],
-            handle: fetchProfile["handle"],
-            description: fetchProfile["description"],
+            avatar: fetchProfile.avatar || null,
+            banner: fetchProfile.banner || null,
+            displayName: fetchProfile.displayName || null,
+            did: did,
+            handle: fetchProfile.handle,
+            description: fetchProfile.description || null,
             pds: pdsurl,
         };
-        setCache(cacheKey, profile);
+        
+        console.log("Created profile:", profile);
+        
+        // Cache for 1 hour
+        setCache(cacheKey, profile, 3600000);
         return profile;
+        
     } catch (error: unknown) {
+        // Clear any bad cache
+        localStorage.removeItem(cacheKey);
         console.error("Error fetching profile:", error);
         if (error instanceof Error) {
             throw error;
@@ -139,20 +263,60 @@ export async function getProfile(identifier: string, fetcher: typeof globalThis.
     }
 }
 
-
-
 /**
  * Discovers OAuth configuration from PDS
  */
 async function discoverOAuthEndpoints(pdsUrl: string) {
-    const wellKnownUrl = `${pdsUrl}/.well-known/oauth-authorization-server`;
-    const response = await fetch(wellKnownUrl);
-    
-    if (!response.ok) {
-        throw new Error('Failed to discover OAuth endpoints');
+    if (!pdsUrl) {
+        throw new Error('PDS URL is required');
     }
     
-    return response.json();
+    // Ensure pdsUrl doesn't have trailing slash
+    const cleanPdsUrl = pdsUrl.replace(/\/$/, '');
+    const wellKnownUrl = `${cleanPdsUrl}/.well-known/oauth-authorization-server`;
+    
+    console.log('Discovering OAuth endpoints at:', wellKnownUrl);
+    
+    try {
+        const response = await fetch(wellKnownUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'ATProtoClient/1.0'
+            },
+            // Add timeout
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to discover OAuth endpoints: ${response.status} ${response.statusText}`);
+        }
+        
+        const config = await response.json();
+        
+        // Validate required OAuth endpoints
+        if (!config.authorization_endpoint || !config.token_endpoint) {
+            throw new Error('OAuth configuration missing required endpoints');
+        }
+        
+        console.log('Successfully discovered OAuth endpoints:', config);
+        return config;
+        
+    } catch (error) {
+        console.error('OAuth discovery failed:', error);
+        
+        // If OAuth discovery fails, try some fallbacks for common PDS instances
+        if (pdsUrl.includes('bsky.social')) {
+            console.log('Attempting fallback OAuth config for bsky.social');
+            return {
+                authorization_endpoint: `${cleanPdsUrl}/oauth/authorize`,
+                token_endpoint: `${cleanPdsUrl}/oauth/token`,
+                issuer: cleanPdsUrl
+            };
+        }
+        
+        throw error;
+    }
 }
 
 /**
@@ -180,7 +344,7 @@ async function sha256(plain: string): Promise<ArrayBuffer> {
  * Base64 URL encode
  */
 function base64urlencode(a: ArrayBuffer): string {
-    return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(a))))
+    return btoa(String.fromCharCode(...Array.from(new Uint8Array(a))))
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
@@ -193,9 +357,23 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
     if (!browser) return;
     
     try {
-        // Discover PDS
+        console.log('Starting AT Proto login for:', identifier);
+        
+        // Clear any cached profile first to ensure fresh data
+        const cacheKey = `profile_${identifier}`;
+        localStorage.removeItem(cacheKey);
+        
+        // Discover PDS and get profile
         const profile = await getProfile(identifier, fetch);
-        const pdsInfo = await discoverOAuthEndpoints(profile.pds);
+        console.log('Got profile:', profile);
+        
+        if (!profile.pds) {
+            throw new Error('Profile missing PDS URL');
+        }
+        
+        // Discover OAuth endpoints
+        const oauthConfig = await discoverOAuthEndpoints(profile.pds);
+        console.log('Got OAuth config:', oauthConfig);
         
         // Generate PKCE challenge
         const codeVerifier = generateRandomString(128);
@@ -208,7 +386,12 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
         const oauthState = {
             codeVerifier,
             state,
-            pdsInfo,
+            pdsInfo: {
+                url: profile.pds,
+                authorizationEndpoint: oauthConfig.authorization_endpoint,
+                tokenEndpoint: oauthConfig.token_endpoint,
+                issuer: oauthConfig.issuer
+            },
             identifier
         };
         sessionStorage.setItem('atproto_oauth_state', JSON.stringify(oauthState));
@@ -217,7 +400,7 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
         const clientId = import.meta.env.PUBLIC_APP_URL || window.location.origin;
         const redirectUri = `${clientId}/auth/callback`;
         
-        const authUrl = new URL(pdsInfo.authorizationEndpoint);
+        const authUrl = new URL(oauthConfig.authorization_endpoint);
         authUrl.searchParams.set('response_type', 'code');
         authUrl.searchParams.set('client_id', clientId);
         authUrl.searchParams.set('redirect_uri', redirectUri);
@@ -225,6 +408,8 @@ export async function initiateATProtoLogin(identifier: string): Promise<void> {
         authUrl.searchParams.set('code_challenge', codeChallenge);
         authUrl.searchParams.set('code_challenge_method', 'S256');
         authUrl.searchParams.set('state', state);
+        
+        console.log('Redirecting to:', authUrl.toString());
         
         // Redirect to authorization endpoint
         window.location.href = authUrl.toString();
@@ -279,15 +464,6 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     
     // Get user profile to extract DID and handle
     const profileResponse = await fetch(`${storedState.pdsInfo.url}/xrpc/com.atproto.server.getSession`, {
-        // Use the PDS URL from the stored profile to ensure we're hitting the correct PDS
-        // This is important because the PDS URL might be different from the one initially discovered
-        // if the user's DID resolves to a different PDS after authentication.
-        // The storedState.pdsInfo.url is the URL of the PDS that issued the tokens.
-        // We need to ensure that the session is retrieved from the same PDS.
-        // The profile.pds from getProfile is the authoritative PDS for the user's DID.
-        // However, for session retrieval, we must use the PDS that issued the tokens.
-        // So, we keep storedState.pdsInfo.url here.
-
         headers: {
             'Authorization': `Bearer ${tokens.access_token}`,
         },
