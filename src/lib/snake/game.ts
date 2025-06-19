@@ -8,22 +8,29 @@ export class SnakeGame {
     private renderer: GameRenderer;
     private snake!: Snake;
     private food!: Food;
-    private score!: number;
+    private _score!: number; // Renamed to _score
     private gameLoopInterval: number | undefined;
     private currentDirection!: Direction;
     private changingDirection!: boolean;
     private gracePeriodActive!: boolean;
     private gracePeriodTimer: number | undefined;
-    private onGameOverCallback: (score: number) => void;
+    private onGameOverCallback: () => void;
     private onScoreUpdateCallback: (score: number) => void;
     private isAnimatingDeath: boolean = false;
+
+    /**
+     * Gets the current score of the game.
+     */
+    public get score(): number {
+        return this._score;
+    }
 
     /**
      * @param canvas The HTML canvas element to draw the game on.
      * @param onGameOverCallback Callback function to be called when the game ends.
      * @param onScoreUpdateCallback Callback function to be called when the score updates.
      */
-    constructor(canvas: HTMLCanvasElement, onGameOverCallback: (score: number) => void, onScoreUpdateCallback: (score: number) => void) {
+    constructor(canvas: HTMLCanvasElement, onGameOverCallback: () => void, onScoreUpdateCallback: (score: number) => void) {
         this.renderer = new GameRenderer(canvas);
 
         this.onGameOverCallback = onGameOverCallback;
@@ -90,8 +97,8 @@ export class SnakeGame {
 
         if (this.snake.head.x === this.food.position.x && this.snake.head.y === this.food.position.y) {
             this.snake.grow();
-            this.score += 1;
-            this.onScoreUpdateCallback(this.score);
+            this._score += 1; // Use _score
+            this.onScoreUpdateCallback(this._score); // Use _score
             this.food.generateNewPosition(this.snake.body);
         }
 
@@ -213,7 +220,7 @@ export class SnakeGame {
                 window.clearInterval(animationInterval);
                 this.isAnimatingDeath = false;
                 this.renderer.drawGameOver(this.score);
-                this.onGameOverCallback(this.score);
+                this.onGameOverCallback();
             }
         }, 125); // 0.125 seconds delay per segment
     }
@@ -222,19 +229,12 @@ export class SnakeGame {
      * Resets the game to its initial state.
      */
     private resetGame(): void {
-        if (this.gameLoopInterval) {
-            window.clearInterval(this.gameLoopInterval);
-            this.gameLoopInterval = undefined;
-        }
         this.snake = new Snake();
         this.food = new Food();
-        this.score = 0;
+        this._score = 0; // Use _score
         this.currentDirection = 'right';
         this.changingDirection = false;
-        this.gracePeriodActive = false;
         this.clearGracePeriod();
-        this.food.generateNewPosition(this.snake.body);
-        this.onScoreUpdateCallback(this.score); // Update score display on reset
-        this.renderer.draw(this.snake, this.food); // Draw initial state
+        this.isAnimatingDeath = false;
     }
 }
