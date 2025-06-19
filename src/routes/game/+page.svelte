@@ -25,8 +25,8 @@
             countdown -= 1;
             if (countdown === 0) {
                 clearInterval(countdownInterval);
-                game = new SnakeGame(canvasElement, handleGameOver, updateScore);
-                setupTouchControls(canvasElement, game); // Moved here
+                game = new SnakeGame(canvasElement, (score: number) => handleGameOver(score), updateScore);
+                setupTouchControls(canvasElement, game);
                 game.startGame();
             }
         }, 1000);
@@ -35,7 +35,14 @@
     /**
      * Handles the game over event, setting the game over state.
      */
-    function handleGameOver(): void {
+    let finalScore = 0;
+
+    /**
+     * Handles the game over event, setting the game over state and storing the final score.
+     * @param score The final score achieved in the game.
+     */
+    function handleGameOver(score: number): void {
+        finalScore = score;
         isGameOver = true;
     }
 
@@ -73,7 +80,7 @@
         {#if countdown > 0}
              <CountdownOverlay {countdown} />
          {:else if isGameOver}
-             <GameOverOverlay {startGame} {handleLogout} />
+             <GameOverOverlay {startGame} {handleLogout} score={finalScore} />
          {/if}
          <canvas
              bind:this={canvasElement}

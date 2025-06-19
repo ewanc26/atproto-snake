@@ -14,7 +14,7 @@ export class SnakeGame {
     private changingDirection!: boolean;
     private gracePeriodActive!: boolean;
     private gracePeriodTimer: number | undefined;
-    private onGameOverCallback: () => void;
+    private onGameOverCallback: (score: number) => void;
     private onScoreUpdateCallback: (score: number) => void;
     private isAnimatingDeath: boolean = false;
 
@@ -23,7 +23,7 @@ export class SnakeGame {
      * @param onGameOverCallback Callback function to be called when the game ends.
      * @param onScoreUpdateCallback Callback function to be called when the score updates.
      */
-    constructor(canvas: HTMLCanvasElement, onGameOverCallback: () => void, onScoreUpdateCallback: (score: number) => void) {
+    constructor(canvas: HTMLCanvasElement, onGameOverCallback: (score: number) => void, onScoreUpdateCallback: (score: number) => void) {
         this.renderer = new GameRenderer(canvas);
 
         this.onGameOverCallback = onGameOverCallback;
@@ -213,7 +213,7 @@ export class SnakeGame {
                 window.clearInterval(animationInterval);
                 this.isAnimatingDeath = false;
                 this.renderer.drawGameOver(this.score);
-                this.onGameOverCallback();
+                this.onGameOverCallback(this.score);
             }
         }, 125); // 0.125 seconds delay per segment
     }
