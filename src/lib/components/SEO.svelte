@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import { page } from '$app/stores';
+    import { browser } from '$app/environment';
 
     export let title: string = 'ATProto Snake Game';
     export let description: string = 'A classic Snake game built with SvelteKit and ATProto.';
@@ -13,6 +14,7 @@
     let originalOgImage: HTMLMetaElement | null;
 
     onMount(() => {
+        if (!browser) return; // Ensure this runs only in the browser
         // Store original metadata to restore on component unmount
         originalTitle = document.title;
         originalDescription = document.querySelector('meta[name="description"]');
@@ -24,18 +26,21 @@
 
     // Reactively update metadata when props or page store changes
     $: {
-        title,
-        description,
-        keywords,
-        ogImage,
-        $page.url.pathname; // Trigger update on path change
-        updateMetadata();
+        if (browser) { // Use SvelteKit's browser check
+            title,
+            description,
+            keywords,
+            ogImage,
+            $page.url.pathname; // Trigger update on path change
+            updateMetadata();
+        }
     }
 
     /**
      * Updates the document's metadata (title, description, keywords, Open Graph image).
      */
     function updateMetadata(): void {
+        if (!browser) return; // Ensure this runs only in the browser
         document.title = title;
 
         let metaDescription = document.querySelector('meta[name="description"]');
@@ -64,6 +69,7 @@
     }
 
     onDestroy(() => {
+        if (!browser) return; // Ensure this runs only in the browser
         // Restore original metadata when component is destroyed
         document.title = originalTitle;
         if (originalDescription) {
