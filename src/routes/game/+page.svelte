@@ -4,6 +4,9 @@
     import { goto } from '$app/navigation';
     import { isLoggedIn, logout } from '$lib/auth/auth';
     import { setupTouchControls } from '$lib/utils/touchControls';
+    import CountdownOverlay from '$lib/components/CountdownOverlay.svelte';
+    import GameOverOverlay from '$lib/components/GameOverOverlay.svelte';
+    import GameHeader from '$lib/components/GameHeader.svelte';
 
     let canvasElement: HTMLCanvasElement;
     let game: SnakeGame;
@@ -64,37 +67,13 @@
 
 <div class="flex flex-col items-center justify-center min-h-screen bg-gray-800 text-white">
      {#if !isGameOver && countdown === 0}
-        <h1 class="text-4xl font-bold mb-8">Snake Game</h1>
-     {/if}
-     {#if !isGameOver && countdown === 0}
-        <div class="flex items-center mb-4">
-            <p class="text-2xl mr-4">Score: {score}</p>
-            <button on:click={handleLogout} class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transition duration-300">Logout</button>
-        </div>
+        <GameHeader {score} {handleLogout} />
      {/if}
     <div class="relative w-full max-w-md mx-auto">
         {#if countdown > 0}
-             <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-75 text-white">
-                 <h2 class="text-5xl font-bold">{countdown}</h2>
-             </div>
+             <CountdownOverlay {countdown} />
          {:else if isGameOver}
-             <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-75 text-white">
-                 <h2 class="text-3xl font-bold mb-4">Game Over!</h2>
-                 <div class="flex space-x-4">
-                     <button
-                         on:click={startGame}
-                         class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition duration-300"
-                     >
-                         Play Again
-                     </button>
-                     <button
-                         on:click={handleLogout}
-                         class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transition duration-300"
-                     >
-                         Logout
-                     </button>
-                 </div>
-             </div>
+             <GameOverOverlay {startGame} {handleLogout} />
          {/if}
          <canvas
              bind:this={canvasElement}
