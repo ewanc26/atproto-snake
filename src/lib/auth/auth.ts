@@ -1,10 +1,10 @@
-import { BskyAgent } from '@atproto/api';
+import { AtpAgent } from '@atproto/api';
 import { get } from 'svelte/store';
 import { goto } from '$app/navigation';
 
 // Define a store for the agent, so it can be accessed throughout the app
 // This is a simplified example, in a real app you might want to use a more robust state management solution
-let agent: BskyAgent | null = null;
+let agent: AtpAgent | null = null;
 
 /**
  * Logs in a user with their AT Protocol handle, app password, and optional PDS URL.
@@ -15,7 +15,7 @@ let agent: BskyAgent | null = null;
 export async function login(identifier: string, password: string, pdsUrl?: string): Promise<void> {
     try {
         // Initialize the agent with the provided PDS URL or a default
-        agent = new BskyAgent({
+        agent = new AtpAgent({
             service: pdsUrl || 'https://bsky.social',
         });
 
@@ -87,7 +87,7 @@ export async function refreshSession(): Promise<void> {
 
     // Ensure agent is initialized with the current PDS
     if (!agent || agent.service.toString() !== pdsServiceUrl) {
-        agent = new BskyAgent({
+        agent = new AtpAgent({
             service: pdsServiceUrl,
         });
     }
