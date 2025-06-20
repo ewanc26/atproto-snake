@@ -1,4 +1,4 @@
-import { GRID_SIZE } from './constants';
+import { GRID_SIZE, DEATH_ANIMATION_SPEED } from './constants';
 import { Snake } from './snake';
 import { Food } from './food';
 
@@ -41,7 +41,7 @@ export class GameRenderer {
         return this.tileSize * 0.9; // Slight padding inside tile
     }
 
-    public draw(snake: Snake, food: Food, gracePeriodActive: boolean = false): void {
+    public draw(snake: Snake, food: Food, gracePeriodActive: boolean = false, segmentsToDraw?: number): void {
         this.snake = snake;
         this.food = food;
 
@@ -51,7 +51,7 @@ export class GameRenderer {
             this.drawGracePeriodOverlay();
         }
 
-        this.drawSnake(snake);
+        this.drawSnake(snake, segmentsToDraw);
         this.drawFood(food);
     }
 
@@ -65,10 +65,12 @@ export class GameRenderer {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    private drawSnake(snake: Snake): void {
+    private drawSnake(snake: Snake, segmentsToDraw?: number): void {
         const offset = (this.tileSize - this.segmentSize) / 2;
 
-        snake.body.forEach((segment, index) => {
+        const bodyToDraw = segmentsToDraw !== undefined ? snake.body.slice(0, segmentsToDraw) : snake.body;
+
+        bodyToDraw.forEach((segment, index) => {
             const x = segment.x * this.tileSize + offset;
             const y = segment.y * this.tileSize + offset;
 
@@ -103,30 +105,60 @@ export class GameRenderer {
     }
 
     /**
-     * Draws text on the canvas at a specified position with given style.
-     * @param text The text content to draw.
-     * @param fontSize The font size for the text.
-     * @param yOffset The vertical offset from the center of the canvas.
-     * @param color The fill color for the text.
-     * @param fontWeight The font weight (e.g., 'bold', 'normal').
-     */
-    private drawText(text: string, fontSize: number, yOffset: number, color: string = '#FFFFFF', fontWeight: string = 'normal'): void {
-        this.ctx.fillStyle = color;
-        this.ctx.font = `${fontWeight} ${Math.floor(this.canvas.width / fontSize)}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(text, this.canvas.width / 2, this.canvas.height / 2 + yOffset);
-    }
-
-    /**
      * Draws the game over screen with score and restart instructions.
      * @param score The final score to display.
      */
-    public drawGameOver(score: number): void {
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    /**
+     * Draws the game over state, including a death animation and final score.
+     * @param finalScore The player's score at the end of the game.
+     * @param callback An optional callback function to execute after the animation completes.
+     */
+    public drawGameOver(finalScore: number, callback?: () => void): void {
+        this.stopDeathAnimation(); // Ensure any previous animation is stopped
+        const initialSnakeLength = this.snake.body.length;
+        this.deathAnimationStep = initialSnakeLength;
 
-        this.drawText('GAME OVER', 15, -30, '#FFFFFF', 'bold');
-        this.drawText(`Final Score: ${score}`, 25, 0);
-        this.drawText('Press any key to restart', 35, 30, '#CCCCCC');
+        this.deathAnimationInterval = window.setInterval(() => {
+            this.deathAnimationStep--;
+            if (this.deathAnimationStep >= 0) {
+                this.draw(this.snake, this.food, false, this.deathAnimationStep);
+            } else {
+                this.stopDeathAnimation();
+                this.clearCanvas(); // Clear the canvas entirely to remove the snake
+                if (callback) {
+                    callback();
+                }
+            }
+        }, DEATH_ANIMATION_SPEED);
+    }
+
+    private deathAnimationInterval?: number;
+    private deathAnimationStep: number = 0;
+
+    private drawDeathAnimation(): void {
+        // This method is no longer used for the new death animation.
+        // The animation logic is now directly within drawGameOver.
+    }
+
+    private stopDeathAnimation(): void {
+        if (this.deathAnimationInterval) {
+            clearInterval(this.deathAnimationInterval);
+            this.deathAnimationInterval = undefined;
+            this.deathAnimationStep = 0;
+        }
+    }
+
+    private drawScoreOverlay(score: number): void {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(0, this.canvas.height / 3, this.canvas.width, this.canvas.height / 3);
+
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = 'bold ' + (this.canvas.width / 10) + 'px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('Game Over!', this.canvas.width / 2, this.canvas.height / 2 - (this.canvas.width / 20));
+
+        this.ctx.font = (this.canvas.width / 20) + 'px Arial';
+        this.ctx.fillText(`Score: ${score}`, this.canvas.width / 2, this.canvas.height / 2 + (this.canvas.width / 20));
     }
 }
