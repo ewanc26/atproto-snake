@@ -434,6 +434,10 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     }
     
     const storedState = JSON.parse(storedStateJson);
+    
+    // Clean up OAuth state immediately to prevent reuse
+    sessionStorage.removeItem('atproto_oauth_state');
+
     if (storedState.state !== state) {
         throw new Error('Invalid OAuth state');
     }
@@ -442,18 +446,30 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     const canonicalClientId = "https://snake.ewancroft.uk/client-metadata.json";
     const redirectUri = "https://snake.ewancroft.uk/auth/callback";
     
+    const requestBody = new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: canonicalClientId,
+        code,
+        redirect_uri: redirectUri,
+        code_verifier: storedState.codeVerifier,
+    });
+
+    console.log('Attempting token exchange with:', {
+        tokenEndpoint: storedState.pdsInfo.tokenEndpoint,
+        code,
+        state,
+        codeVerifier: storedState.codeVerifier,
+        redirectUri,
+        canonicalClientId,
+        requestBody: requestBody.toString()
+    });
+
     const tokenResponse = await fetch(storedState.pdsInfo.tokenEndpoint, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            client_id: canonicalClientId,
-            code,
-            redirect_uri: redirectUri,
-            code_verifier: storedState.codeVerifier,
-        }),
+        body: requestBody,
     });
     
     if (!tokenResponse.ok) {
@@ -487,8 +503,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     // Store session in localStorage
     localStorage.setItem('atproto_session', JSON.stringify(session));
     
-    // Clean up OAuth state
-    sessionStorage.removeItem('atproto_oauth_state');
+
     
     return session;
 }
