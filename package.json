@@ -29,7 +29,6 @@
 		"vite-plugin-devtools-json": "^0.2.0"
 	},
 	"dependencies": {
-		"@atproto/api": "^0.15.16",
-		"@atproto/oauth-client-browser": "^0.3.25"
+		"@atproto/api": "^0.15.16"
 	}
 }
