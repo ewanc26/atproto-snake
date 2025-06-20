@@ -88,14 +88,36 @@ export class SnakeGame {
         }
     }
 
-    private setGameState(newState: GameState): void {
-        this._gameState = newState;
-        this.onStateChangeCallback?.(newState);
+    private setGameState(state: GameState): void {
+        this._gameState = state;
+        if (this.onStateChangeCallback) {
+            this.onStateChangeCallback(state);
+        }
+    }
+
+    private resetGame(): void {
+        this.snake.reset();
+        this.food.generateNewPosition(this.snake.body);
+        this._score = 0;
+        this.currentSpeed = INITIAL_SNAKE_SPEED;
+        this.currentDirection = 'right';
+        this.nextDirection = 'right';
+        this.gracePeriodActive = true;
+
+        if (this.gracePeriodTimer) clearTimeout(this.gracePeriodTimer);
+        this.gracePeriodTimer = window.setTimeout(() => {
+            this.gracePeriodActive = false;
+        }, GRACE_PERIOD_DURATION);
+
+        this.renderer.draw(this.snake, this.food, this.gracePeriodActive);
     }
 
     private startGameLoop(): void {
         this.stopGameLoop();
-        this.gameLoopInterval = window.setInterval(() => this.gameLoop(), this.currentSpeed);
+
+        this.gameLoopInterval = window.setInterval(() => {
+            this.gameLoop();
+        }, this.currentSpeed);
     }
 
     private stopGameLoop(): void {
@@ -106,11 +128,13 @@ export class SnakeGame {
     }
 
     private gameLoop(): void {
+        if (this.gracePeriodActive) return;
+
         this.currentDirection = this.nextDirection;
         this.snake.move(this.currentDirection);
 
         if (this.snake.checkWallCollision() || this.snake.checkSelfCollision()) {
-            this.triggerDeathAnimation();
+            this.handleGameOver();
             return;
         }
 
@@ -118,75 +142,51 @@ export class SnakeGame {
             this.snake.grow();
             this._score++;
             this.onScoreUpdateCallback(this._score);
-            this.currentSpeed = Math.max(MIN_SNAKE_SPEED, this.currentSpeed * SPEED_INCREASE_RATE);
-            this.restartGameLoop();
-
-            this.startGracePeriod();
-
             this.food.generateNewPosition(this.snake.body);
+
+            // Increase speed, capped
+            this.currentSpeed = Math.max(MIN_SNAKE_SPEED, this.currentSpeed * SPEED_INCREASE_RATE);
+            this.startGameLoop();
         }
 
-        this.renderer.draw(this.snake, this.food, this.gracePeriodActive);
-    }
-
-    private restartGameLoop(): void {
-        this.stopGameLoop();
-        this.startGameLoop();
-    }
-
-    private startGracePeriod(): void {
-        this.gracePeriodActive = true;
-        if (this.gracePeriodTimer) clearTimeout(this.gracePeriodTimer);
-
-        this.gracePeriodTimer = window.setTimeout(() => {
-            this.gracePeriodActive = false;
-        }, GRACE_PERIOD_DURATION);
-    }
-
-    private triggerDeathAnimation(): void {
-        this.setGameState('animating-death');
-        this.stopGameLoop();
-
-        const deathAnimationInterval = window.setInterval(() => {
-            if (!this.snake.removeLastSegment()) {
-                clearInterval(deathAnimationInterval);
-                this.setGameState('game-over');
-                this.onGameOverCallback();
-                this.renderer.drawGameOver(this._score);
-            } else {
-                this.renderer.draw(this.snake, this.food);
-            }
-        }, DEATH_ANIMATION_SPEED);
-    }
-
-    private resetGame(): void {
-        this.snake.reset();
-        this.currentSpeed = INITIAL_SNAKE_SPEED;
-        this._score = 0;
-        this.currentDirection = 'right';
-        this.nextDirection = 'right';
-        this.food.generateNewPosition(this.snake.body);
-        this.setGameState('ready');
         this.renderer.draw(this.snake, this.food);
     }
 
-    private handleKeyPress(event: KeyboardEvent): void {
-        const keyDirectionMap: Record<string, Direction> = {
-            ArrowUp: 'up',
-            ArrowDown: 'down',
-            ArrowLeft: 'left',
-            ArrowRight: 'right',
-            w: 'up',
-            s: 'down',
-            a: 'left',
-            d: 'right'
-        };
+    private handleGameOver(): void {
+        this.stopGameLoop();
+        this.setGameState('game-over');
+        this.renderer.drawGameOver(this._score);
+        this.onGameOverCallback();
+    }
 
-        if (keyDirectionMap[event.key]) {
-            this.changeDirection(keyDirectionMap[event.key]);
-            event.preventDefault();
-        } else if (this._gameState === 'game-over') {
-            this.startGame();
+    private handleKeyPress(event: KeyboardEvent): void {
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'w':
+            case 'W':
+                this.changeDirection('up');
+                break;
+            case 'ArrowDown':
+            case 's':
+            case 'S':
+                this.changeDirection('down');
+                break;
+            case 'ArrowLeft':
+            case 'a':
+            case 'A':
+                this.changeDirection('left');
+                break;
+            case 'ArrowRight':
+            case 'd':
+            case 'D':
+                this.changeDirection('right');
+                break;
+            case 'Enter':
+            case ' ':
+                if (this._gameState === 'game-over') {
+                    this.startGame();
+                }
+                break;
         }
     }
 }
