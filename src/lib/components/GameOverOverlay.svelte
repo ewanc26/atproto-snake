@@ -4,8 +4,8 @@
     export let score: number;
 </script>
 
-<div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-sm text-white rounded-xl p-4 sm:p-6">
-    <div class="text-center max-w-sm w-full">
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-sm text-white rounded-xl p-8">
+    <div class="text-center max-w-md w-full mx-auto">
         <!-- Game Over Title -->
         <div class="mb-6">
             <h1 class="text-3xl sm:text-5xl font-bold text-red-400 mb-2">Game Over!</h1>
@@ -31,7 +31,8 @@
             >
                 <div class="flex items-center justify-center space-x-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-6-4V6a2 2 0 112 2h2a2 2 0 012 2v4M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>Play Again</span>
                 </div>
