@@ -160,33 +160,28 @@ export class SnakeGame {
     }
 
     private handleKeyPress(event: KeyboardEvent): void {
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'w':
-            case 'W':
-                this.changeDirection('up');
-                break;
-            case 'ArrowDown':
-            case 's':
-            case 'S':
-                this.changeDirection('down');
-                break;
-            case 'ArrowLeft':
-            case 'a':
-            case 'A':
-                this.changeDirection('left');
-                break;
-            case 'ArrowRight':
-            case 'd':
-            case 'D':
-                this.changeDirection('right');
-                break;
-            case 'Enter':
-            case ' ':
-                if (this._gameState === 'game-over') {
-                    this.startGame();
-                }
-                break;
+        const directionMap: { [key: string]: Direction } = {
+            'ArrowUp': 'up',
+            'w': 'up',
+            'W': 'up',
+            'ArrowDown': 'down',
+            's': 'down',
+            'S': 'down',
+            'ArrowLeft': 'left',
+            'a': 'left',
+            'A': 'left',
+            'ArrowRight': 'right',
+            'd': 'right',
+            'D': 'right',
+        };
+
+        const direction = directionMap[event.key];
+        if (direction) {
+            this.changeDirection(direction);
+        } else if (event.key === 'Enter' || event.key === ' ') {
+            if (this._gameState === 'game-over') {
+                this.startGame();
+            }
         }
     }
 }
