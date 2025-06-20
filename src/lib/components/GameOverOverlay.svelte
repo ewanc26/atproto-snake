@@ -1,6 +1,6 @@
 <script lang="ts">
-    export let startGame: () => void;
-    export let handleLogout: () => void;
+    import { goto } from '$app/navigation';
+
     export let score: number;
 </script>
 
@@ -26,7 +26,7 @@
         <!-- Action Buttons -->
         <div class="space-y-3 w-full">
             <button 
-                on:click={startGame}
+                on:click={() => goto('/game')}
                 class="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 active:scale-95"
             >
                 <div class="flex items-center justify-center space-x-2">
@@ -39,7 +39,7 @@
             </button>
             
             <button 
-                on:click={handleLogout}
+                on:click={() => goto('/login')}
                 class="w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl border border-gray-600/50"
             >
                 <div class="flex items-center justify-center space-x-2">
