@@ -28,11 +28,10 @@
     <h1 class="text-3xl sm:text-4xl font-bold mb-6 text-center bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
         Snake Game
     </h1>
-    
     <!-- Score and User Info Card -->
     <div class="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-700/50">
         <div class="flex items-center justify-between">
-            <!-- Score and User Info -->
+            <!-- Score and Logout -->
             <div class="flex flex-col space-y-1">
                 <div class="flex items-center space-x-3">
                     <div class="bg-green-500/20 rounded-lg px-3 py-2">
@@ -48,18 +47,16 @@
                     </button>
                 </div>
                 {#if userHandle}
-                    <div class="flex items-center space-x-2">
-                        <p class="text-sm text-gray-400">
-                            Playing as <span class="text-green-400 font-medium">@{userHandle}</span>
-                        </p>
-                        {#if avatar}
-                            <img src={avatar} alt="User Avatar" class="w-8 h-8 rounded-full border-2 border-green-400" />
-                        {/if}
-                    </div>
+                    <p class="text-sm text-gray-400">
+                        Playing as <span class="text-green-400 font-medium">@{userHandle}</span>
+                    </p>
                 {/if}
             </div>
-            
 
+            <!-- Avatar on the right -->
+            {#if avatar}
+                <img src={avatar} alt="User Avatar" class="w-20 h-20 rounded-full border-2 border-green-400 ml-4" />
+            {/if}
         </div>
     </div>
 </div>
