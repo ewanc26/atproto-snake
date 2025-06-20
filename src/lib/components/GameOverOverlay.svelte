@@ -4,11 +4,11 @@
     export let score: number;
 </script>
 
-<div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-sm text-white rounded-xl p-6">
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-sm text-white rounded-xl p-4 sm:p-6">
     <div class="text-center max-w-sm w-full">
         <!-- Game Over Title -->
         <div class="mb-6">
-            <h1 class="text-4xl sm:text-5xl font-bold text-red-400 mb-2">Game Over!</h1>
+            <h1 class="text-3xl sm:text-5xl font-bold text-red-400 mb-2">Game Over!</h1>
             <div class="h-1 w-16 bg-gradient-to-r from-red-400 to-red-600 mx-auto rounded-full"></div>
         </div>
         
