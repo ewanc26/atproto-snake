@@ -2,7 +2,7 @@
   "client_id": "https://snake.ewancroft.uk/client-metadata.json",
   "client_name": "Atproto Snake",
   "client_uri": "https://snake.ewancroft.uk",
-  "logo_uri": "https://snake.ewancroft.uk/favicon.png",
+  "logo_uri": "https://ewancroft.uk/favicon.png",
   "redirect_uris": [
     "https://snake.ewancroft.uk/auth/callback"
   ],
