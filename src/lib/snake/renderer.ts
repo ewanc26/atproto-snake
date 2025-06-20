@@ -102,20 +102,31 @@ export class GameRenderer {
         this.ctx.fillRect(x + this.tileSize * 0.2, y + this.tileSize * 0.2, this.tileSize * 0.2, this.tileSize * 0.2);
     }
 
+    /**
+     * Draws text on the canvas at a specified position with given style.
+     * @param text The text content to draw.
+     * @param fontSize The font size for the text.
+     * @param yOffset The vertical offset from the center of the canvas.
+     * @param color The fill color for the text.
+     * @param fontWeight The font weight (e.g., 'bold', 'normal').
+     */
+    private drawText(text: string, fontSize: number, yOffset: number, color: string = '#FFFFFF', fontWeight: string = 'normal'): void {
+        this.ctx.fillStyle = color;
+        this.ctx.font = `${fontWeight} ${Math.floor(this.canvas.width / fontSize)}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(text, this.canvas.width / 2, this.canvas.height / 2 + yOffset);
+    }
+
+    /**
+     * Draws the game over screen with score and restart instructions.
+     * @param score The final score to display.
+     */
     public drawGameOver(score: number): void {
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = `bold ${Math.floor(this.canvas.width / 15)}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 30);
-
-        this.ctx.font = `${Math.floor(this.canvas.width / 25)}px Arial`;
-        this.ctx.fillText(`Final Score: ${score}`, this.canvas.width / 2, this.canvas.height / 2);
-
-        this.ctx.font = `${Math.floor(this.canvas.width / 35)}px Arial`;
-        this.ctx.fillStyle = '#CCCCCC';
-        this.ctx.fillText('Press any key to restart', this.canvas.width / 2, this.canvas.height / 2 + 30);
+        this.drawText('GAME OVER', 15, -30, '#FFFFFF', 'bold');
+        this.drawText(`Final Score: ${score}`, 25, 0);
+        this.drawText('Press any key to restart', 35, 30, '#CCCCCC');
     }
 }

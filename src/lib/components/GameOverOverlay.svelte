@@ -4,7 +4,7 @@
     export let score: number;
 </script>
 
-<div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-sm text-white rounded-xl p-8">
+<div class="absolute inset-0 flex flex-col items-center justify-center text-white rounded-xl p-8">
     <div class="text-center max-w-md w-full mx-auto">
         <!-- Game Over Title -->
         <div class="mb-6">
