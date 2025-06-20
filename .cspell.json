@@ -1,0 +1,41 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "atproto",
+    "bsky",
+    "didcomm",
+    "diddoc",
+    "dids",
+    "dpop",
+    "ewancroft",
+    "Initialises",
+    "lexicon",
+    "lexicons",
+    "oauth",
+    "pdsurl",
+    "pkce",
+    "rkey",
+    "sveltekit",
+    "urlencode",
+    "xrpc"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "vite.config.ts",
+    "svelte.config.js",
+    "README.md"
+  ],
+  "dictionaries": [
+    "typescript",
+    "css",
+    "html",
+    "markdown",
+    "node"
+  ]
+}
