@@ -27,3 +27,7 @@
 <SEO {title} {description} {keywords} />
 
 <slot />
+
+<footer class="fixed bottom-0 left-0 w-full bg-gray-800 text-white py-4 text-center z-10">
+    <p>Created by <a href="https://bsky.app/profile/did:plc:ofrbh253gwicbkc5nktqepol" class="text-green-400 hover:underline">@ewancroft.uk</a> (<a href="https://github.com/ewanc26/atproto-snake" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline">source code</a> under MIT)</p>
+</footer>
