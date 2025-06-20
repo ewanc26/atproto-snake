@@ -5,7 +5,7 @@
     export let title: string = 'ATProto Snake Game';
     export let description: string = 'A classic Snake game built with SvelteKit and ATProto.';
     export let keywords: string = 'snake, game, svelte, sveltekit, atproto, web game';
-    export let ogImage: string = '/favicon.png'; // Default Open Graph image
+    export let ogImage: string = 'https://ewancroft.uk/embed/main.png'; // Default Open Graph image
 
     let originalTitle: string;
     let originalDescription: HTMLMetaElement | null;
