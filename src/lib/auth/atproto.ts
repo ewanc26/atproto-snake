@@ -440,7 +440,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     
     // Exchange code for tokens
     const canonicalClientId = "https://snake.ewancroft.uk/client-metadata.json";
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    const redirectUri = "https://snake.ewancroft.uk/auth/callback";
     
     const tokenResponse = await fetch(storedState.pdsInfo.tokenEndpoint, {
         method: 'POST',
