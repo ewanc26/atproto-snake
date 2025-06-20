@@ -3,6 +3,8 @@
     import SEO from '$lib/components/SEO.svelte';
     import { page } from '$app/stores';
 
+    import Footer from '$lib/components/Footer.svelte';
+
     let title = 'ATProto Snake Game';
     let description = 'A classic Snake game built with SvelteKit and ATProto.';
     let keywords = 'snake, game, svelte, sveltekit, atproto, web game';
@@ -28,7 +30,4 @@
 
 <slot />
 
-<footer class="fixed bottom-0 left-0 w-full bg-gray-800 text-white py-4 text-center z-10 text-sm opacity-25">
-    <p>&copy; {new Date().getFullYear()} created by <a href="https://bsky.app/profile/did:plc:ofrbh253gwicbkc5nktqepol" class="text-green-400 hover:underline">@ewancroft.uk</a></p>
-    <p>(<a href="https://github.com/ewanc26/atproto-snake" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline">source code</a> under MIT) - <a href="https://ewancroft.uk" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline">main website</a></p>
-</footer>
+<Footer />
