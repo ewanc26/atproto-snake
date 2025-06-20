@@ -96,5 +96,3 @@
         }
     });
 </script>
-
-<!-- This component does not render any visible HTML -->
