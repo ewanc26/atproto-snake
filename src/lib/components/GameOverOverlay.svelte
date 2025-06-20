@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
+    import { logout } from '$lib/auth/auth';
 
     export let score: number;
 </script>
@@ -37,17 +38,11 @@
                     <span>Play Again</span>
                 </div>
             </button>
-            
-            <button 
-                on:click={() => goto('/login')}
-                class="w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl border border-gray-600/50"
-            >
-                <div class="flex items-center justify-center space-x-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Logout</span>
-                </div>
+            <button
+                on:click={logout}
+                    class="w-full px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 active:scale-95"
+                >
+                Logout
             </button>
         </div>
     </div>
