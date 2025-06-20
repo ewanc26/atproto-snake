@@ -88,10 +88,10 @@
         <!-- Game Canvas Container -->
         <div class="relative w-full max-w-md mx-auto">
             <!-- Canvas with improved styling -->
-            <div class="relative overflow-hidden rounded-xl shadow-2xl bg-gray-900 border-4 border-green-500/50">
+            <div class="relative overflow-hidden rounded-xl shadow-2xl bg-gray-900 border-4 {isGameOver ? 'border-transparent' : 'border-green-500/50'}">
                 <canvas
                     bind:this={canvasElement}
-                    class="w-full aspect-square block bg-gray-900 {isGameOver || countdown > 0 ? 'opacity-50' : ''}"
+                    class="w-full aspect-square block bg-gray-900 {isGameOver ? 'opacity-0' : (countdown > 0 ? 'opacity-50' : '')}"
                 ></canvas>
                 
                 <!-- Overlays -->
