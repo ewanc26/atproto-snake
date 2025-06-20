@@ -8,6 +8,7 @@ A classic Snake game built with SvelteKit and integrated with the AT Protocol fo
 * **AT Protocol Authentication**: Log in using your AT Protocol handle (e.g., bsky.social).
 * **Responsive Design**: Play on various devices.
 * **SvelteKit Frontend**: Fast and modern user interface.
+* **High Score Saving**: Automatically saves your high score to the AT Protocol.
 
 ## Getting Started
 
@@ -55,9 +56,7 @@ This will create a `build` directory with the production-ready files.
 2. **Start Game**: Once logged in, the game will start after a short countdown.
 3. **Controls**: Use the arrow keys (Up, Down, Left, Right) on your keyboard to control the snake. On touch devices, swipe in the desired direction.
 4. **Objective**: Guide the snake to eat the food (green squares) to grow longer and increase your score. Avoid hitting the walls or your own tail.
-5. **Game Over**: The game ends when the snake hits a wall or its own tail.
-
-**Note**: Future functionality will include saving your high score to the AT Protocol using the `uk.ewancroft.snake.score` lexicon.
+5. **Game Over**: The game ends when the snake hits a wall or its own tail. Your score will be automatically submitted to the AT Protocol if it's greater than zero.
 
 ## Project Structure
 

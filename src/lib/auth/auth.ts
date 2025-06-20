@@ -1,10 +1,11 @@
 import { goto } from '$app/navigation';
 import { 
     initiateATProtoLogin, 
-    isATProtoLoggedIn, 
-    logoutATProto, 
+    isATProtoLoggedIn,
+    logoutATProto,
     getATProtoSession,
     refreshATProtoSession,
+    submitScore as submitATProtoScore,
     type ATProtoSession 
 } from './atproto';
 
@@ -52,6 +53,15 @@ export function getCurrentSession(): ATProtoSession | null {
  */
 export async function refreshSession(): Promise<ATProtoSession | null> {
     return await refreshATProtoSession();
+}
+
+/**
+ * Submits a user's score.
+ * @param score The score to submit.
+ * @returns A Promise that resolves when the score is successfully submitted.
+ */
+export async function submitScore(score: number): Promise<void> {
+    return await submitATProtoScore(score);
 }
 
 /**

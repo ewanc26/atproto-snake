@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { SnakeGame } from '$lib/snake/game';
     import { goto } from '$app/navigation';
-    import { isLoggedIn, logout } from '$lib/auth/auth';
+    import { isLoggedIn, logout, submitScore } from '$lib/auth/auth';
     import { setupTouchControls } from '$lib/utils/touchControls';
     import CountdownOverlay from '$lib/components/CountdownOverlay.svelte';
     import GameOverOverlay from '$lib/components/GameOverOverlay.svelte';
@@ -41,9 +41,19 @@
      * Handles the game over event, setting the game over state and storing the final score.
      * @param score The final score achieved in the game.
      */
-    const handleGameOver: () => void = () => {
+    const handleGameOver: () => void = async () => {
         finalScore = game.score; // Access score directly from the game instance
         isGameOver = true;
+
+        // Submit score if greater than 0
+        if (finalScore > 0) {
+            try {
+                await submitScore(finalScore);
+                console.log('Score submitted successfully!');
+            } catch (error) {
+                console.error('Failed to submit score:', error);
+            }
+        }
     }
 
     /**

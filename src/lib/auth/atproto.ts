@@ -534,6 +534,49 @@ export function isATProtoLoggedIn(): boolean {
 /**
  * Logs out the current AT Protocol session
  */
+/**
+ * Submits a user's score to the AT Protocol.
+ * @param score The score to submit.
+ * @returns A Promise that resolves when the score is successfully submitted.
+ */
+export async function submitScore(score: number): Promise<void> {
+    if (!browser) throw new Error('Score submission must be handled in browser');
+
+    const session = getATProtoSession();
+    if (!session) {
+        throw new Error('Not logged in. Cannot submit score.');
+    }
+
+    try {
+        const response = await fetch(`${session.pdsUrl}/xrpc/com.atproto.repo.createRecord`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.accessJwt}`,
+            },
+            body: JSON.stringify({
+                repo: session.did,
+                collection: 'uk.ewancroft.snake.score',
+                rkey: Date.now().toString(), // Unique record key
+                record: {
+                    score: score,
+                    createdAt: new Date().toISOString(),
+                },
+            }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to submit score: ${response.status} - ${errorText}`);
+        }
+
+        console.log('Score submitted successfully:', score);
+    } catch (error) {
+        console.error('Error submitting score:', error);
+        throw error;
+    }
+}
+
 export function logoutATProto(): void {
     if (!browser) return;
     
