@@ -4,10 +4,7 @@
   "client_uri": "https://snake.ewancroft.uk",
   "logo_uri": "https://snake.ewancroft.uk/favicon.png",
   "redirect_uris": [
-    "https://snake.ewancroft.uk/auth/callback",
-    "https://atproto-snake.vercel.app/auth/callback",
-    "http://localhost:5173/auth/callback",
-    "http://127.0.0.1:5173/auth/callback"
+    "https://snake.ewancroft.uk/auth/callback"
   ],
   "scope": "atproto",
   "grant_types": ["authorization_code", "refresh_token"],
