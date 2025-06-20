@@ -1,5 +1,4 @@
 import { BskyAgent } from '@atproto/api';
-import { get } from 'svelte/store';
 import { goto } from '$app/navigation';
 
 // Define a store for the agent, so it can be accessed throughout the app
