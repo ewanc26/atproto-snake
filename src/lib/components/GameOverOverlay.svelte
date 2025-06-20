@@ -36,6 +36,4 @@
         margin-bottom: 20px;
         font-size: 0.8em;
     }
-
-
 </style>
