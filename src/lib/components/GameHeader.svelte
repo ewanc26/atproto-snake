@@ -1,10 +1,26 @@
 <script lang="ts">
-    import { getCurrentUserHandle, logout } from '$lib/auth/auth';
+    import { getCurrentUserHandle, logout, getProfile } from '$lib/auth/auth';
     
     export let score: number;
 
-    
+    let avatar: string | undefined;
+
     $: userHandle = getCurrentUserHandle();
+
+    // Function to fetch the user's profile and avatar
+    async function fetchProfile() {
+        if (userHandle) {
+            const profile = await getProfile(userHandle);
+            if (profile?.avatar) {
+                avatar = profile.avatar;
+            }
+        }
+    }
+
+    // Reactively fetch profile when userHandle changes
+    $: if (userHandle) {
+        fetchProfile();
+    }
 </script>
 
 <div class="w-full">
@@ -32,9 +48,14 @@
                     </button>
                 </div>
                 {#if userHandle}
-                    <p class="text-sm text-gray-400 ml-1">
-                        Playing as <span class="text-green-400 font-medium">@{userHandle}</span>
-                    </p>
+                    <div class="flex items-center space-x-2">
+                        <p class="text-sm text-gray-400">
+                            Playing as <span class="text-green-400 font-medium">@{userHandle}</span>
+                        </p>
+                        {#if avatar}
+                            <img src={avatar} alt="User Avatar" class="w-8 h-8 rounded-full border-2 border-green-400" />
+                        {/if}
+                    </div>
                 {/if}
             </div>
             
