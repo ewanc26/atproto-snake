@@ -9,8 +9,8 @@
             <div class="text-8xl sm:text-9xl font-bold text-green-400 animate-pulse">
                 {countdown}
             </div>
-            <!-- Glow effect -->
-            <div class="absolute inset-0 text-8xl sm:text-9xl font-bold text-green-400/30 blur-xl">
+             <!-- Glow effect -->
+             <div class="absolute inset-0 text-8xl sm:text-9xl font-bold text-green-400/30 blur-xl">
                 {countdown}
             </div>
         </div>
