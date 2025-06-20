@@ -128,14 +128,12 @@ export class SnakeGame {
     }
 
     private gameLoop(): void {
-        if (this.gracePeriodActive) return;
 
         this.currentDirection = this.nextDirection;
         this.snake.move(this.currentDirection);
 
         if (this.snake.checkWallCollision() || this.snake.checkSelfCollision()) {
             this.handleGameOver();
-            return;
         }
 
         if (this.snake.head.x === this.food.position.x && this.snake.head.y === this.food.position.y) {
@@ -153,10 +151,12 @@ export class SnakeGame {
     }
 
     private handleGameOver(): void {
+        console.log('handleGameOver called'); // Add logging here
         this.stopGameLoop();
         this.setGameState('game-over');
-        this.renderer.drawGameOver(this._score);
-        this.onGameOverCallback();
+        this.renderer.drawGameOver(this._score, () => {
+            this.onGameOverCallback();
+        });
     }
 
     private handleKeyPress(event: KeyboardEvent): void {
