@@ -52,7 +52,7 @@ This will create a `build` directory with the production-ready files.
 
 ## How to Play
 
-1. **Login**: Enter your AT Protocol handle (e.g., `yourhandle.bsky.social`) on the login page.
+1. **Login**: Enter your AT Protocol handle (e.g., `yourhandle.bsky.social`), app password, and optionally your PDS URL on the login page.
 2. **Start Game**: Once logged in, the game will start after a short countdown.
 3. **Controls**: Use the arrow keys (Up, Down, Left, Right) on your keyboard to control the snake. On touch devices, swipe in the desired direction.
 4. **Objective**: Guide the snake to eat the food (green squares) to grow longer and increase your score. Avoid hitting the walls or your own tail.
