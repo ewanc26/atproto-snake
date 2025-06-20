@@ -1,240 +1,192 @@
 import { Snake } from './snake';
 import { Food } from './food';
-import { INITIAL_SNAKE_SPEED, GRID_SIZE } from './constants';
-import type { Direction } from './types';
+import { INITIAL_SNAKE_SPEED, MIN_SNAKE_SPEED, SPEED_INCREASE_RATE, GRACE_PERIOD_DURATION, DEATH_ANIMATION_SPEED } from './constants';
+import type { Direction, GameState } from './types';
 import { GameRenderer } from './renderer';
 
 export class SnakeGame {
     private renderer: GameRenderer;
-    private snake!: Snake;
-    private food!: Food;
-    private _score!: number; // Renamed to _score
-    private gameLoopInterval: number | undefined;
-    private currentDirection!: Direction;
-    private changingDirection!: boolean;
-    private gracePeriodActive!: boolean;
-    private gracePeriodTimer: number | undefined;
+    private snake: Snake;
+    private food: Food;
+    private _score: number = 0;
+    private _gameState: GameState = 'ready';
+    private gameLoopInterval?: number;
+    private currentDirection: Direction = 'right';
+    private nextDirection: Direction = 'right';
+    private currentSpeed: number = INITIAL_SNAKE_SPEED;
+    
+    private gracePeriodActive: boolean = false;
+    private gracePeriodTimer?: number;
+    
     private onGameOverCallback: () => void;
     private onScoreUpdateCallback: (score: number) => void;
-    private isAnimatingDeath: boolean = false;
+    private onStateChangeCallback?: (state: GameState) => void;
 
-    /**
-     * Gets the current score of the game.
-     */
-    public get score(): number {
-        return this._score;
-    }
+    public get score(): number { return this._score; }
+    public get gameState(): GameState { return this._gameState; }
+    public get speed(): number { return this.currentSpeed; }
 
-    /**
-     * @param canvas The HTML canvas element to draw the game on.
-     * @param onGameOverCallback Callback function to be called when the game ends.
-     * @param onScoreUpdateCallback Callback function to be called when the score updates.
-     */
-    constructor(canvas: HTMLCanvasElement, onGameOverCallback: () => void, onScoreUpdateCallback: (score: number) => void) {
+    constructor(
+        canvas: HTMLCanvasElement, 
+        onGameOverCallback: () => void, 
+        onScoreUpdateCallback: (score: number) => void,
+        onStateChangeCallback?: (state: GameState) => void
+    ) {
         this.renderer = new GameRenderer(canvas);
-
+        this.snake = new Snake();
+        this.food = new Food();
+        
         this.onGameOverCallback = onGameOverCallback;
         this.onScoreUpdateCallback = onScoreUpdateCallback;
+        this.onStateChangeCallback = onStateChangeCallback;
 
+        this.setupEventListeners();
+        this.resetGame();
+    }
+
+    private setupEventListeners(): void {
         document.addEventListener('keydown', this.handleKeyPress.bind(this));
-        this.resetGame();
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && this._gameState === 'playing') {
+                this.togglePause();
+                event.preventDefault();
+            }
+        });
     }
 
-    /**
-     * Changes the direction of the snake based on user input.
-     * @param newDirection The new direction ('up', 'down', 'left', 'right').
-     */
     public changeDirection(newDirection: Direction): void {
-        if (this.changingDirection) return;
+        if (this._gameState !== 'playing') return;
 
-        this.changingDirection = true;
+        const opposites: Record<Direction, Direction> = {
+            'up': 'down',
+            'down': 'up',
+            'left': 'right',
+            'right': 'left'
+        };
 
-        const goingUp = this.currentDirection === 'up';
-        const goingDown = this.currentDirection === 'down';
-        const goingLeft = this.currentDirection === 'left';
-        const goingRight = this.currentDirection === 'right';
-
-        if (newDirection === 'left' && !goingRight) {
-            this.currentDirection = 'left';
-        } else if (newDirection === 'up' && !goingDown) {
-            this.currentDirection = 'up';
-        } else if (newDirection === 'right' && !goingLeft) {
-            this.currentDirection = 'right';
-        } else if (newDirection === 'down' && !goingUp) {
-            this.currentDirection = 'down';
+        if (opposites[this.currentDirection] !== newDirection) {
+            this.nextDirection = newDirection;
         }
     }
 
-    /**
-     * Starts the game loop.
-     */
-    startGame(): void {
-        this.resetGame();
-        this.gameLoopInterval = window.setInterval(() => this.gameLoop(), INITIAL_SNAKE_SPEED);
+    public startGame(): void {
+        if (this._gameState === 'game-over' || this._gameState === 'ready') {
+            this.resetGame();
+        }
+        this.setGameState('playing');
+        this.startGameLoop();
     }
 
-    /**
-     * The main game loop, responsible for updating game state and rendering.
-     */
+    public togglePause(): void {
+        if (this._gameState === 'playing') {
+            this.setGameState('paused');
+            this.stopGameLoop();
+        } else if (this._gameState === 'paused') {
+            this.setGameState('playing');
+            this.startGameLoop();
+        }
+    }
+
+    private setGameState(newState: GameState): void {
+        this._gameState = newState;
+        this.onStateChangeCallback?.(newState);
+    }
+
+    private startGameLoop(): void {
+        this.stopGameLoop();
+        this.gameLoopInterval = window.setInterval(() => this.gameLoop(), this.currentSpeed);
+    }
+
+    private stopGameLoop(): void {
+        if (this.gameLoopInterval) {
+            clearInterval(this.gameLoopInterval);
+            this.gameLoopInterval = undefined;
+        }
+    }
+
     private gameLoop(): void {
-        if (this.isAnimatingDeath) {
-            return; // Do not update game state during death animation
-        }
-
-        this.changingDirection = false;
+        this.currentDirection = this.nextDirection;
         this.snake.move(this.currentDirection);
 
-        if (this.checkCollision()) {
-            if (!this.gracePeriodActive) {
-                this.startGracePeriod();
-            } else {
-                this.endGame();
-                return;
-            }
-        } else if (this.gracePeriodActive) {
-            this.clearGracePeriod();
+        if (this.snake.checkWallCollision() || this.snake.checkSelfCollision()) {
+            this.triggerDeathAnimation();
+            return;
         }
 
         if (this.snake.head.x === this.food.position.x && this.snake.head.y === this.food.position.y) {
             this.snake.grow();
-            this._score += 1; // Use _score
-            this.onScoreUpdateCallback(this._score); // Use _score
+            this._score++;
+            this.onScoreUpdateCallback(this._score);
+            this.currentSpeed = Math.max(MIN_SNAKE_SPEED, this.currentSpeed * SPEED_INCREASE_RATE);
+            this.restartGameLoop();
+
+            this.startGracePeriod();
+
             this.food.generateNewPosition(this.snake.body);
         }
 
-        this.draw();
+        this.renderer.draw(this.snake, this.food, this.gracePeriodActive);
     }
 
-    /**
-     * Draws all game elements on the canvas.
-     */
-    private draw(): void {
+    private restartGameLoop(): void {
+        this.stopGameLoop();
+        this.startGameLoop();
+    }
+
+    private startGracePeriod(): void {
+        this.gracePeriodActive = true;
+        if (this.gracePeriodTimer) clearTimeout(this.gracePeriodTimer);
+
+        this.gracePeriodTimer = window.setTimeout(() => {
+            this.gracePeriodActive = false;
+        }, GRACE_PERIOD_DURATION);
+    }
+
+    private triggerDeathAnimation(): void {
+        this.setGameState('animating-death');
+        this.stopGameLoop();
+
+        const deathAnimationInterval = window.setInterval(() => {
+            if (!this.snake.removeLastSegment()) {
+                clearInterval(deathAnimationInterval);
+                this.setGameState('game-over');
+                this.onGameOverCallback();
+                this.renderer.drawGameOver(this._score);
+            } else {
+                this.renderer.draw(this.snake, this.food);
+            }
+        }, DEATH_ANIMATION_SPEED);
+    }
+
+    private resetGame(): void {
+        this.snake.reset();
+        this.currentSpeed = INITIAL_SNAKE_SPEED;
+        this._score = 0;
+        this.currentDirection = 'right';
+        this.nextDirection = 'right';
+        this.food.generateNewPosition(this.snake.body);
+        this.setGameState('ready');
         this.renderer.draw(this.snake, this.food);
     }
 
-    /**
-     * Handles keyboard input to change snake direction.
-     * @param event The keyboard event.
-     */
-    /**
-     * Handles keyboard input to change snake direction.
-     * @param event The keyboard event.
-     */
     private handleKeyPress(event: KeyboardEvent): void {
-        const keyPressed = event.key;
-        let direction: Direction | undefined;
+        const keyDirectionMap: Record<string, Direction> = {
+            ArrowUp: 'up',
+            ArrowDown: 'down',
+            ArrowLeft: 'left',
+            ArrowRight: 'right',
+            w: 'up',
+            s: 'down',
+            a: 'left',
+            d: 'right'
+        };
 
-        if (keyPressed === 'ArrowLeft') {
-            direction = 'left';
-        } else if (keyPressed === 'ArrowUp') {
-            direction = 'up';
-        } else if (keyPressed === 'ArrowRight') {
-            direction = 'right';
-        } else if (keyPressed === 'ArrowDown') {
-            direction = 'down';
+        if (keyDirectionMap[event.key]) {
+            this.changeDirection(keyDirectionMap[event.key]);
+            event.preventDefault();
+        } else if (this._gameState === 'game-over') {
+            this.startGame();
         }
-
-        if (direction) {
-            this.changeDirection(direction);
-        }
-    }
-
-    /**
-     * Checks for collisions with walls or the snake's own body.
-     * @returns True if a collision occurred, false otherwise.
-     */
-    private checkCollision(): boolean {
-        const head = this.snake.head;
-
-        // Wall collision
-        const hitLeftWall = head.x < 0;
-        const hitRightWall = head.x >= GRID_SIZE;
-        const hitTopWall = head.y < 0;
-        const hitBottomWall = head.y >= GRID_SIZE;
-
-        if (hitLeftWall || hitRightWall || hitTopWall || hitBottomWall) {
-            return true;
-        }
-
-        // Self-collision
-        for (let i = 1; i < this.snake.body.length; i++) {
-            if (head.x === this.snake.body[i].x && head.y === this.snake.body[i].y) {
-                this.endGame(); // End game immediately on self-collision
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Starts the grace period for wall collisions.
-     */
-    private startGracePeriod(): void {
-        this.gracePeriodActive = true;
-        this.gracePeriodTimer = window.setTimeout(() => {
-            this.endGame();
-        }, 1000); // 1 second grace period
-    }
-
-    /**
-     * Clears the grace period if the snake moves away from the wall.
-     */
-    private clearGracePeriod(): void {
-        if (this.gracePeriodTimer) {
-            clearTimeout(this.gracePeriodTimer);
-            this.gracePeriodTimer = undefined;
-        }
-        this.gracePeriodActive = false;
-    }
-
-    /**
-     * Ends the game, clearing the game loop interval.
-     */
-    private endGame(): void {
-        if (this.gameLoopInterval) {
-            window.clearInterval(this.gameLoopInterval);
-            this.gameLoopInterval = undefined; // Clear the interval ID
-        }
-        this.clearGracePeriod();
-        this.isAnimatingDeath = true;
-        this.animateDeath();
-    }
-
-    /**
-     * Resets the game to its initial state.
-     */
-    /**
-     * Animates the snake's death by progressively removing segments.
-     */
-    private animateDeath(): void {
-        const segmentCount = this.snake.body.length;
-        let segmentsRemoved = 0;
-
-        const animationInterval = window.setInterval(() => {
-            if (segmentsRemoved < segmentCount) {
-                this.snake.body.pop(); // Remove one segment
-                this.draw(); // Redraw the game to show the segment removal
-                segmentsRemoved++;
-            } else {
-                window.clearInterval(animationInterval);
-                this.isAnimatingDeath = false;
-                this.renderer.drawGameOver(this.score);
-                this.onGameOverCallback();
-            }
-        }, 125); // 0.125 seconds delay per segment
-    }
-
-    /**
-     * Resets the game to its initial state.
-     */
-    private resetGame(): void {
-        this.snake = new Snake();
-        this.food = new Food();
-        this._score = 0; // Use _score
-        this.currentDirection = 'right';
-        this.changingDirection = false;
-        this.clearGracePeriod();
-        this.isAnimatingDeath = false;
     }
 }
