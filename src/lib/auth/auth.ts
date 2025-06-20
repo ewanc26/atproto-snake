@@ -1,13 +1,8 @@
 import { goto } from '$app/navigation';
-import { 
-    initiateATProtoLogin, 
-    isATProtoLoggedIn,
-    logoutATProto,
-    getATProtoSession,
-    refreshATProtoSession,
-    submitScore as submitATProtoScore,
-    type ATProtoSession 
-} from './atproto';
+import { initiateATProtoLogin } from './oauth';
+import { isATProtoLoggedIn, logoutATProto, getATProtoSession, refreshATProtoSession } from './session';
+import type { ATProtoSession } from './session';
+import { submitScore as submitATProtoScore } from './atproto';
 
 /**
  * Handles the login process with AT Protocol
