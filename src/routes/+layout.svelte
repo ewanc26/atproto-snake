@@ -29,6 +29,10 @@
 
 <SEO {title} {description} {keywords} />
 
-<slot />
+<!-- Main content with proper spacing to avoid footer overlap -->
+<main class="min-h-screen relative">
+    <slot />
+</main>
 
+<!-- Footer with improved positioning -->
 <Footer />
