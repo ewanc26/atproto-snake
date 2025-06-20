@@ -1,5 +1,4 @@
 import { AtpAgent } from '@atproto/api';
-import { get } from 'svelte/store';
 import { goto } from '$app/navigation';
 
 // Define a store for the agent, so it can be accessed throughout the app
@@ -118,6 +117,36 @@ export function logout(): void {
  */
 export function getCurrentUserHandle(): string | null {
     return agent?.session?.handle || null;
+}
+
+/**
+ * Fetches the profile of a given user handle.
+ * @param handle The user's handle (e.g., 'alice.bsky.social').
+ * @returns The user's profile object, or null if not found or an error occurs.
+ */
+export async function getProfile(handle: string): Promise<any | null> {
+    if (!agent) {
+        // If agent is not initialized, try to refresh session to get it ready
+        try {
+            await refreshSession();
+        } catch (e) {
+            console.error("Agent not initialized and session refresh failed:", e);
+            return null;
+        }
+    }
+
+    if (!agent) {
+        console.error("Agent is still not initialized after refresh attempt.");
+        return null;
+    }
+
+    try {
+        const response = await agent.getProfile({ actor: handle });
+        return response.data;
+    } catch (e) {
+        console.error(`Failed to fetch profile for ${handle}:`, e);
+        return null;
+    }
 }
 
 // Re-initialize agent on page load if a session exists
