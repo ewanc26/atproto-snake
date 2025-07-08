@@ -5,7 +5,7 @@ A classic Snake game built with SvelteKit and integrated with the AT Protocol fo
 ## Features
 
 * **Classic Snake Gameplay**: Enjoy the timeless game of Snake.
-* **AT Protocol Authentication**: Log in using your AT Protocol handle (e.g., bsky.social).
+* **AT Protocol Authentication**: Log in using your AT Protocol handle (e.g., `ewancroft.uk` or `*.bsky.social`).
 * **Responsive Design**: Play on various devices.
 * **SvelteKit Frontend**: Fast and modern user interface.
 * **High Score Saving**: Automatically saves your high score to the AT Protocol.
@@ -62,7 +62,7 @@ This will create a `build` directory with the production-ready files.
 
 * `src/lib/auth/`: Contains all AT Protocol authentication logic.
 * `src/lib/snake/`: Core Snake game logic.
-* `src/routes/`: SvelteKit routes for different pages (login, game, callback).
+* `src/routes/`: SvelteKit routes for different pages (login, game).
 * `src/lib/components/`: Reusable Svelte components.
 * `static/client-metadata.json`: OAuth client metadata for AT Protocol.
 
