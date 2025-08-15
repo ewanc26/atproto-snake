@@ -2,32 +2,66 @@ import { AtpAgent } from '@atproto/api';
 import { goto } from '$app/navigation';
 
 // Define a store for the agent, so it can be accessed throughout the app
-// This is a simplified example, in a real app you might want to use a more robust state management solution
 let agent: AtpAgent | null = null;
 
+interface ResolvedIdentity {
+    did: string;
+    handle: string;
+    pds: string;
+    signing_key: string;
+}
+
 /**
- * Logs in a user with their AT Protocol handle, app password, and optional PDS URL.
+ * Resolves an AT Protocol identifier (handle or DID) to get PDS information
+ * @param identifier The user's handle (e.g., 'alice.bsky.social') or DID
+ * @returns Promise containing the resolved identity information
+ */
+async function resolveIdentifier(identifier: string): Promise<ResolvedIdentity> {
+    const response = await fetch(
+        `https://slingshot.microcosm.blue/xrpc/com.bad-example.identity.resolveMiniDoc?identifier=${encodeURIComponent(identifier)}`
+    );
+    
+    if (!response.ok) {
+        throw new Error(`Failed to resolve identifier: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.did || !data.pds) {
+        throw new Error('Invalid response from identity resolver');
+    }
+    
+    return data;
+}
+
+/**
+ * Logs in a user with their AT Protocol handle/DID and app password.
+ * Automatically resolves the PDS URL using Slingshot.
  * @param identifier The user's handle (e.g., 'alice.bsky.social') or DID.
  * @param password The user's app password.
- * @param pdsUrl Optional. The URL of the Personal Data Server (PDS). Defaults to Bluesky's PDS.
  */
-export async function login(identifier: string, password: string, pdsUrl?: string): Promise<void> {
+export async function login(identifier: string, password: string): Promise<void> {
     try {
-        // Initialize the agent with the provided PDS URL or a default
+        // Resolve the identifier to get PDS and other info
+        const resolved = await resolveIdentifier(identifier);
+        
+        // Initialize the agent with the resolved PDS URL
         agent = new AtpAgent({
-            service: pdsUrl || 'https://bsky.social',
+            service: resolved.pds,
         });
 
-        // Attempt to login
+        // Attempt to login using the resolved DID or original identifier
         await agent.login({
-            identifier: identifier,
+            identifier: resolved.did, // Use DID for more reliable authentication
             password: password,
         });
 
-        // Store session details (e.g., in local storage or a more secure cookie)
-        // For simplicity, we'll just rely on the agent holding the session for now
-        // In a real application, you'd persist the session token securely.
-        localStorage.setItem('atproto_session', JSON.stringify({ session: agent.session, pdsUrl: pdsUrl || 'https://bsky.social' }));
+        // Store session details with resolved information
+        localStorage.setItem('atproto_session', JSON.stringify({ 
+            session: agent.session, 
+            pdsUrl: resolved.pds,
+            resolvedData: resolved
+        }));
 
         // Redirect to the game page on successful login
         goto('/game');
@@ -35,7 +69,19 @@ export async function login(identifier: string, password: string, pdsUrl?: strin
         console.error('Login failed:', e);
         // Clear any stored session on failure
         localStorage.removeItem('atproto_session');
-        throw new Error(`Login failed: ${e.message || 'Unknown error'}`);
+        
+        // Provide more specific error messages
+        if (e.message.includes('Failed to resolve identifier')) {
+            throw new Error('Handle not found. Please check your AT Protocol handle.');
+        } else if (e.message.includes('AuthFactorTokenRequired')) {
+            throw new Error('Two-factor authentication required. Please use your app password.');
+        } else if (e.message.includes('AccountTakedown') || e.message.includes('AccountSuspended')) {
+            throw new Error('Account is suspended or has been taken down.');
+        } else if (e.message.includes('InvalidCredentials')) {
+            throw new Error('Invalid credentials. Please check your handle and app password.');
+        } else {
+            throw new Error(`Login failed: ${e.message || 'Unknown error'}`);
+        }
     }
 }
 
@@ -55,10 +101,6 @@ export function isLoggedIn(): boolean {
 
 /**
  * Refreshes the current user session.
- * This function is crucial for maintaining a logged-in state without requiring re-authentication.
- * It attempts to refresh the session using the existing agent. If no agent or session exists,
- * it will attempt to load a session from local storage and then refresh it.
- * @returns A Promise that resolves when the session is refreshed, or rejects on failure.
  */
 export async function refreshSession(): Promise<void> {
     let currentSession = agent?.session;
@@ -78,6 +120,8 @@ export async function refreshSession(): Promise<void> {
                 throw new Error('Invalid stored session. Please log in again.');
             }
         }
+    } else if (agent?.service) {
+        pdsServiceUrl = agent.service.toString();
     }
 
     if (!currentSession || !pdsServiceUrl) {
@@ -92,9 +136,17 @@ export async function refreshSession(): Promise<void> {
     }
 
     try {
-        // Always pass the session object to resumeSession
         await agent.resumeSession(currentSession);
-        localStorage.setItem('atproto_session', JSON.stringify({ session: agent.session, pdsUrl: pdsServiceUrl }));
+        
+        // Update stored session
+        const storedData = localStorage.getItem('atproto_session');
+        if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            localStorage.setItem('atproto_session', JSON.stringify({ 
+                ...parsedData,
+                session: agent.session 
+            }));
+        }
     } catch (e) {
         console.error('Failed to refresh session:', e);
         localStorage.removeItem('atproto_session');
@@ -120,13 +172,37 @@ export function getCurrentUserHandle(): string | null {
 }
 
 /**
+ * Gets the current user's DID.
+ * @returns The user's DID if logged in, otherwise null.
+ */
+export function getCurrentUserDid(): string | null {
+    return agent?.session?.did || null;
+}
+
+/**
+ * Gets the resolved identity data for the current user.
+ * @returns The resolved identity data if available, otherwise null.
+ */
+export function getCurrentUserResolvedData(): ResolvedIdentity | null {
+    const storedData = localStorage.getItem('atproto_session');
+    if (storedData) {
+        try {
+            const parsedData = JSON.parse(storedData);
+            return parsedData.resolvedData || null;
+        } catch (e) {
+            return null;
+        }
+    }
+    return null;
+}
+
+/**
  * Fetches the profile of a given user handle.
  * @param handle The user's handle (e.g., 'alice.bsky.social').
  * @returns The user's profile object, or null if not found or an error occurs.
  */
 export async function getProfile(handle: string): Promise<any | null> {
     if (!agent) {
-        // If agent is not initialized, try to refresh session to get it ready
         try {
             await refreshSession();
         } catch (e) {
@@ -149,7 +225,6 @@ export async function getProfile(handle: string): Promise<any | null> {
     }
 }
 
-// Re-initialize agent on page load if a session exists
 /**
  * Submits the user's score to the AT Protocol.
  * @param score The score to submit.
@@ -176,8 +251,7 @@ export async function submitScore(score: number): Promise<void> {
     }
 }
 
-// This ensures the agent is ready for use immediately
+// Initialize agent on page load if a session exists
 if (typeof window !== 'undefined' && localStorage.getItem('atproto_session')) {
-    // Attempt to refresh session on startup. This will initialize the agent if needed.
     refreshSession().catch(e => console.error("Initial session refresh failed:", e));
 }
