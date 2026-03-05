@@ -76,3 +76,7 @@ This will create a `build` directory with the production-ready files.
 ## License
 
 This project is open-source and available under the MIT License.
+
+## ☕ Support
+
+If you found this useful, consider [buying me a ko-fi](https://ko-fi.com/ewancroft)!
