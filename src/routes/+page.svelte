@@ -1,27 +1,21 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
-    import { onMount } from 'svelte';
-    import { isLoggedIn, refreshSession } from '$lib/auth/auth';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { initAuth } from '$lib/auth/auth';
 
-    onMount(async () => {
-        if (!isLoggedIn()) {
-            goto('/login');
-        } else {
-            // Try to refresh the session to ensure it's still valid
-            try {
-                await refreshSession();
-                goto('/game');
-            } catch {
-                // If refresh fails, redirect to login
-                goto('/login');
-            }
-        }
-    });
+	onMount(async () => {
+		const agent = await initAuth();
+		if (agent) {
+			goto('/game');
+		} else {
+			goto('/login');
+		}
+	});
 </script>
 
-<div class="flex flex-col items-center justify-center min-h-screen bg-gray-800 text-white">
-    <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-        <p class="text-lg">Loading...</p>
-    </div>
+<div class="flex min-h-screen flex-col items-center justify-center bg-gray-800 text-white">
+	<div class="text-center">
+		<div class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-green-500"></div>
+		<p class="text-lg">Loading...</p>
+	</div>
 </div>
