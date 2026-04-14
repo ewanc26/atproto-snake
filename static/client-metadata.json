@@ -1,0 +1,12 @@
+{
+	"client_id": "https://snake.ewancroft.uk/client-metadata.json",
+	"client_name": "Snake Game",
+	"client_uri": "https://snake.ewancroft.uk",
+	"redirect_uris": ["https://snake.ewancroft.uk/"],
+	"grant_types": ["authorization_code", "refresh_token"],
+	"response_types": ["code"],
+	"scope": "atproto repo:uk.ewancroft.snake.score",
+	"application_type": "web",
+	"token_endpoint_auth_method": "none",
+	"dpop_bound_access_tokens": true
+}
