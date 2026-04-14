@@ -1,7 +1,7 @@
 {
 	"name": "atproto-snake",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -29,6 +29,7 @@
 		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
-		"@atproto/api": "^0.19.6"
+		"@atproto/api": "^0.19.6",
+		"@atproto/oauth-client-browser": "^0.3.41"
 	}
 }
