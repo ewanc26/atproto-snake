@@ -2,13 +2,15 @@
 
 A classic Snake game built with SvelteKit and integrated with the AT Protocol for user authentication.
 
+> 🧶 Also available on [Tangled](https://tangled.org/ewancroft.uk/atproto-snake)
+
 ## Features
 
-* **Classic Snake Gameplay**: Enjoy the timeless game of Snake.
-* **AT Protocol Authentication**: Log in using your AT Protocol handle (e.g., `ewancroft.uk` or `*.bsky.social`).
-* **Responsive Design**: Play on various devices.
-* **SvelteKit Frontend**: Fast and modern user interface.
-* **High Score Saving**: Automatically saves your high score to the AT Protocol.
+- **Classic Snake Gameplay**: Enjoy the timeless game of Snake.
+- **AT Protocol Authentication**: Log in using your AT Protocol handle (e.g., `ewancroft.uk` or `*.bsky.social`).
+- **Responsive Design**: Play on various devices.
+- **SvelteKit Frontend**: Fast and modern user interface.
+- **High Score Saving**: Automatically saves your high score to the AT Protocol.
 
 ## Getting Started
 
@@ -16,23 +18,23 @@ To get a local copy up and running, follow these simple steps.
 
 ### Prerequisites
 
-* Node.js (LTS recommended)
-* npm (comes with Node.js)
+- Node.js (LTS recommended)
+- npm (comes with Node.js)
 
 ### Installation
 
 1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/ewanc26/atproto-snake.git
-    cd atproto-snake
-    ```
+   ```bash
+   git clone https://github.com/ewanc26/atproto-snake.git
+   cd atproto-snake
+   ```
 
 2. Install dependencies:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 ### Running the Development Server
 
@@ -60,18 +62,18 @@ This will create a `build` directory with the production-ready files.
 
 ## Project Structure
 
-* `src/lib/auth/`: Contains all AT Protocol authentication logic.
-* `src/lib/snake/`: Core Snake game logic.
-* `src/routes/`: SvelteKit routes for different pages (login, game).
-* `src/lib/components/`: Reusable Svelte components.
-* `static/client-metadata.json`: OAuth client metadata for AT Protocol.
+- `src/lib/auth/`: Contains all AT Protocol authentication logic.
+- `src/lib/snake/`: Core Snake game logic.
+- `src/routes/`: SvelteKit routes for different pages (login, game).
+- `src/lib/components/`: Reusable Svelte components.
+- `static/client-metadata.json`: OAuth client metadata for AT Protocol.
 
 ## Technologies Used
 
-* [SvelteKit](https://kit.svelte.dev/): Web framework for building the frontend.
-* [AT Protocol](https://atproto.com/): Decentralised social networking protocol for authentication.
-* [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework for styling.
-* [Vite](https://vitejs.dev/): Next-generation frontend tooling.
+- [SvelteKit](https://kit.svelte.dev/): Web framework for building the frontend.
+- [AT Protocol](https://atproto.com/): Decentralised social networking protocol for authentication.
+- [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework for styling.
+- [Vite](https://vitejs.dev/): Next-generation frontend tooling.
 
 ## License
 
