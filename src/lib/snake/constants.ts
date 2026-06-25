@@ -1,3 +1,6 @@
+// ── Game Constants ───────────────────────────────────────────
+// Tuning parameters for snake movement, speed scaling, and timing.
+
 export const GRID_SIZE = 20;
 export const INITIAL_SNAKE_SPEED = 200;
 export const MIN_SNAKE_SPEED = 80;

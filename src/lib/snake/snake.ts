@@ -1,3 +1,7 @@
+// ── Snake Entity ─────────────────────────────────────────────
+// Tracks body segments, handles movement, collision detection,
+// and growth state. The snake starts centered on the grid.
+
 import type { Position, Direction } from './types';
 import { GRID_SIZE } from './constants';
 
@@ -21,6 +25,8 @@ export class Snake {
         return this.body.length;
     }
 
+    // ─── Initialisation ─────────────────────────────────────
+
     private initializeSnake(): void {
         const centerX = Math.floor(GRID_SIZE / 2);
         const centerY = Math.floor(GRID_SIZE / 2);
@@ -31,11 +37,14 @@ export class Snake {
         }
     }
 
+    // ─── Movement ──────────────────────────────────────────
+
     move(direction: Direction): void {
         const newHead = this.calculateNewHeadPosition(direction);
         this.body.unshift(newHead);
         this._head = newHead;
 
+        // Only pop the tail if we aren't growing this frame
         if (this.segmentsToAdd > 0) {
             this.segmentsToAdd--;
         } else {
@@ -64,9 +73,13 @@ export class Snake {
         return newHead;
     }
 
+    // ─── Growth ────────────────────────────────────────────
+
     grow(): void {
         this.segmentsToAdd++;
     }
+
+    // ─── Collision Detection ────────────────────────────────
 
     checkSelfCollision(): boolean {
         const head = this._head;
@@ -82,6 +95,8 @@ export class Snake {
         const head = this._head;
         return head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE;
     }
+
+    // ─── Lifecycle ─────────────────────────────────────────
 
     reset(): void {
         this.initializeSnake();

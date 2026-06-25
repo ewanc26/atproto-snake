@@ -1,8 +1,11 @@
+<!-- Home splash — redirects based on auth state -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { initAuth } from '$lib/auth/auth';
 
+	// Redirect based on existing session — login page if unauthenticated,
+	// game page if already logged in.
 	onMount(async () => {
 		const agent = await initAuth();
 		if (agent) {

@@ -1,4 +1,6 @@
 <script lang="ts">
+	// Login route — offers both OAuth (recommended) and app-password
+	// authentication. Redirects to /game if a session already exists.
 	import { login, loginWithOAuth, initAuth, getAuthType } from '$lib/auth/auth';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';

@@ -1,4 +1,7 @@
 <script lang="ts">
+    // SEO: manages <title> and meta tags (description, keywords, OG image).
+    // Restores original metadata when the component unmounts so page changes
+    // in a SPA don't leave stale tags behind.
     import { onMount, onDestroy } from 'svelte';
     import { page } from '$app/stores';
 

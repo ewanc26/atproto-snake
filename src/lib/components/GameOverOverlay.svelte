@@ -1,4 +1,6 @@
 <script lang="ts">
+    // GameOverOverlay: displays final score with Play Again / Logout buttons.
+    // Score is passed via URL param from the game route after submission.
     import { goto } from '$app/navigation';
     import { logout } from '$lib/auth/auth';
 

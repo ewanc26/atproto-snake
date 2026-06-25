@@ -1,11 +1,17 @@
+// ── AT Protocol Authentication ──────────────────────────────
+// Provides login (OAuth and app-password), session management,
+// and score submission against the uk.ewancroft.snake.score
+// lexicon. Authentication flows through Slingshot identity
+// resolution or direct PDS browser OAuth.
+
 import { AtpAgent, type Agent } from '@atproto/api';
 import { goto } from '$app/navigation';
 import { initOAuth, signInWithOAuth } from './oauth';
 
-// Store for the agent - can be from OAuth or app password
+// Module-level agent reference, initialised on login or OAuth callback
 let agent: AtpAgent | Agent | null = null;
 
-// Track auth type for display purposes
+// Tracks which auth method is active for display and logout behaviour
 let authType: 'oauth' | 'password' | null = null;
 
 interface ResolvedIdentity {
@@ -15,8 +21,12 @@ interface ResolvedIdentity {
 	signing_key: string;
 }
 
+// ─── Identity Resolution ────────────────────────────────
+
 /**
  * Resolves an AT Protocol identifier (handle or DID) to get PDS information
+ * using the Slingshot miniDoc resolver.
+ * Throws if the identifier can't be resolved or the response is malformed.
  */
 async function resolveIdentifier(identifier: string): Promise<ResolvedIdentity> {
 	const response = await fetch(
@@ -35,6 +45,8 @@ async function resolveIdentifier(identifier: string): Promise<ResolvedIdentity> 
 
 	return data;
 }
+
+// ─── Initialisation ─────────────────────────────────────
 
 /**
  * Initialize authentication on page load.
@@ -73,6 +85,8 @@ export async function initAuth(): Promise<Agent | null> {
 
 	return null;
 }
+
+// ─── Login ──────────────────────────────────────────────
 
 /**
  * Login with OAuth - redirects browser to PDS for auth.
@@ -132,6 +146,8 @@ export async function login(identifier: string, password: string): Promise<void>
 		}
 	}
 }
+
+// ─── Session Management ─────────────────────────────────
 
 /**
  * Checks if a user is currently logged in.
@@ -249,6 +265,8 @@ export function getCurrentUserResolvedData(): ResolvedIdentity | null {
 	return null;
 }
 
+// ─── Profile & Score ───────────────────────────────────
+
 /**
  * Fetches the profile of a given user handle.
  */
@@ -277,7 +295,8 @@ export async function getProfile(handle: string): Promise<any | null> {
 }
 
 /**
- * Submits the user's score to the AT Protocol.
+ * Submits the user's score as an AT Protocol record under
+ * the uk.ewancroft.snake.score collection on the user's repo.
  */
 export async function submitScore(score: number): Promise<void> {
 	if (!agent || !agent.session) {

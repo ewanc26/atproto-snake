@@ -1,6 +1,7 @@
 <script lang="ts">
+    // GameHeader: shows score, user handle, avatar, and logout button
     import { getCurrentUserHandle, logout, getProfile } from '$lib/auth/auth';
-    
+
     export let score: number;
 
     let avatar: string | undefined;

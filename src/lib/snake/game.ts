@@ -1,3 +1,8 @@
+// ── Game Engine ──────────────────────────────────────────────
+// Orchestrates the snake, food, renderer, and game loop.
+// Manages state transitions (ready -> playing -> game-over)
+// and input buffering for direction changes.
+
 import { Snake } from './snake';
 import { Food } from './food';
 import { INITIAL_SNAKE_SPEED, MIN_SNAKE_SPEED, SPEED_INCREASE_RATE, GRACE_PERIOD_DURATION, DEATH_ANIMATION_SPEED } from './constants';
@@ -25,6 +30,8 @@ export class SnakeGame {
     public get score(): number { return this._score; }
     public get gameState(): GameState { return this._gameState; }
     public get speed(): number { return this.currentSpeed; }
+
+    // ─── Initialisation ─────────────────────────────────────
 
     constructor(
         canvas: HTMLCanvasElement, 
@@ -55,6 +62,8 @@ export class SnakeGame {
         });
     }
 
+    // ─── Input Handling ─────────────────────────────────────
+
     public changeDirection(newDirection: Direction): void {
         if (this._gameState !== 'playing') return;
 
@@ -69,6 +78,8 @@ export class SnakeGame {
             this.nextDirection = newDirection;
         }
     }
+
+    // ─── Game Lifecycle ─────────────────────────────────────
 
     public startGame(): void {
         if (this._gameState === 'game-over' || this._gameState === 'ready') {
@@ -94,6 +105,8 @@ export class SnakeGame {
             this.onStateChangeCallback(state);
         }
     }
+
+    // ─── Internal Helpers ────────────────────────────────
 
     private resetGame(): void {
         this.snake.reset();
@@ -128,7 +141,7 @@ export class SnakeGame {
     }
 
     private gameLoop(): void {
-
+        // Apply buffered direction for this tick
         this.currentDirection = this.nextDirection;
         this.snake.move(this.currentDirection);
 
@@ -142,7 +155,7 @@ export class SnakeGame {
             this.onScoreUpdateCallback(this._score);
             this.food.generateNewPosition(this.snake.body);
 
-            // Increase speed, capped
+            // Speed up with each food eaten, clamped so it never goes below the minimum
             this.currentSpeed = Math.max(MIN_SNAKE_SPEED, this.currentSpeed * SPEED_INCREASE_RATE);
             this.startGameLoop();
         }

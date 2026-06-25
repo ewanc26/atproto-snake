@@ -1,4 +1,5 @@
 <script lang="ts">
+    // Countdown overlay shown at game start (3, 2, 1, Go!)
     export let countdown: number;
 </script>
 

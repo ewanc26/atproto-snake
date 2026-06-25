@@ -1,3 +1,8 @@
+// ── Touch Controls ──────────────────────────────────────────
+// Translates swipe gestures on the canvas into direction changes.
+// Uses touchstart/touchend delta rather than touchmove to avoid
+// spurious direction changes during a held swipe.
+
 import type { SnakeGame } from '$lib/snake/game';
 
 /**

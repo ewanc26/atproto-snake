@@ -1,3 +1,7 @@
+// ── Food Placement ───────────────────────────────────────────
+// Manages food position generation, with fallback when random
+// placement exhausts attempts (board is nearly full).
+
 import type { Position } from './types';
 import { GRID_SIZE } from './constants';
 

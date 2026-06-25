@@ -1,4 +1,6 @@
 <script lang="ts">
+	// Root layout — initialises OAuth on every page mount, applies global
+	// CSS, and sets route-aware SEO metadata via the SEO component.
 	import '../app.css';
 	import SEO from '$lib/components/SEO.svelte';
 	import { getStores } from '$app/stores';
@@ -9,6 +11,7 @@
 
 	import Footer from '$lib/components/Footer.svelte';
 
+	// ── Route-Specific SEO ────────────────────────────────
 	let title = 'ATProto Snake Game';
 	let description = 'A classic Snake game built with SvelteKit and ATProto.';
 	let keywords = 'snake, game, svelte, sveltekit, atproto, web game';

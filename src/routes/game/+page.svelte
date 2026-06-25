@@ -1,4 +1,7 @@
 <script lang="ts">
+    // Game route — the main game loop. On mount it checks auth, then
+    // starts a 3-second countdown before the SnakeGame engine begins.
+    // Scores are submitted to AT Protocol on game over.
     import { onMount } from 'svelte';
     import { SnakeGame } from '$lib/snake/game';
     import { goto } from '$app/navigation';

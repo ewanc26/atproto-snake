@@ -1,4 +1,6 @@
 <script lang="ts">
+    // Game-over route — reads the score from the URL query param
+    // and renders the GameOverOverlay with play-again / logout actions.
     import GameOverOverlay from "$lib/components/GameOverOverlay.svelte";
     import { getStores } from '$app/stores';
     const { page } = getStores();

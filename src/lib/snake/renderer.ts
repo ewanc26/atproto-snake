@@ -1,3 +1,8 @@
+// ── Canvas Renderer ─────────────────────────────────────────
+// Handles all drawing for the Snake game: the grid, snake body
+// (with head and eye detail), food, grace-period overlay, and
+// the death animation sequence.
+
 import { GRID_SIZE, DEATH_ANIMATION_SPEED } from './constants';
 import { Snake } from './snake';
 import { Food } from './food';
@@ -33,13 +38,18 @@ export class GameRenderer {
         this.canvas.height = size;
     }
 
+    // ─── Layout ────────────────────────────────────────────
+
     private get tileSize(): number {
         return this.canvas.width / GRID_SIZE;
     }
 
+    // Segment drawn slightly smaller than tile for visual breathing room
     private get segmentSize(): number {
-        return this.tileSize * 0.9; // Slight padding inside tile
+        return this.tileSize * 0.9;
     }
+
+    // ─── Drawing ───────────────────────────────────────────
 
     public draw(snake: Snake, food: Food, gracePeriodActive: boolean = false, segmentsToDraw?: number): void {
         this.snake = snake;
@@ -60,6 +70,7 @@ export class GameRenderer {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
+    // Flashes briefly after game start so the player can orient themselves
     private drawGracePeriodOverlay(): void {
         this.ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -135,10 +146,13 @@ export class GameRenderer {
     private deathAnimationInterval?: number;
     private deathAnimationStep: number = 0;
 
+    // Legacy — animation is now handled inline in drawGameOver
     private drawDeathAnimation(): void {
         // This method is no longer used for the new death animation.
         // The animation logic is now directly within drawGameOver.
     }
+
+    // ─── Death Animation ──────────────────────────────────
 
     private stopDeathAnimation(): void {
         if (this.deathAnimationInterval) {

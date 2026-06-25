@@ -1,7 +1,13 @@
+<!--
+    Old footer block — kept as fallback. The refactored version below
+    uses backdrop blur and a cleaner layout with SVG GitHub icon.
+-->
 <footer class="fixed bottom-0 left-0 w-full bg-gray-800 text-white py-4 text-center z-10 text-sm opacity-25">
     <p>&copy; {new Date().getFullYear()} created by <a href="https://bsky.app/profile/did:plc:ofrbh253gwicbkc5nktqepol" class="text-green-400 hover:underline">@ewancroft.uk</a></p>
     <p>(<a href="https://github.com/ewanc26/atproto-snake" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline">source code</a> under MIT) - <a href="https://ewancroft.uk" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline">main website</a></p>
-</footer><footer class="fixed bottom-0 left-0 w-full bg-gray-800/80 backdrop-blur-sm border-t border-gray-700/50 text-white py-3 text-center z-10 text-xs">
+</footer>
+<!-- Active footer with backdrop blur and refined layout -->
+<footer class="fixed bottom-0 left-0 w-full bg-gray-800/80 backdrop-blur-sm border-t border-gray-700/50 text-white py-3 text-center z-10 text-xs">
     <div class="max-w-4xl mx-auto px-4 space-y-1">
         <p class="text-gray-300">
             &copy; {new Date().getFullYear()} created by 
