@@ -1,84 +1,45 @@
 # ATProto Snake Game
 
-A classic Snake game built with SvelteKit and integrated with the AT Protocol for user authentication.
+Snake game built with SvelteKit, auth via AT Protocol.
 
-> 🧶 Also available on [Tangled](https://tangled.org/ewancroft.uk/atproto-snake)
+> Also available on [Tangled](https://tangled.org/ewancroft.uk/atproto-snake)
 
 ## Features
 
-- **Classic Snake Gameplay**: Enjoy the timeless game of Snake.
-- **AT Protocol Authentication**: Log in using your AT Protocol handle (e.g., `ewancroft.uk` or `*.bsky.social`).
-- **Responsive Design**: Play on various devices.
-- **SvelteKit Frontend**: Fast and modern user interface.
-- **High Score Saving**: Automatically saves your high score to the AT Protocol.
+- Log in with your AT Protocol handle (e.g., `ewancroft.uk`)
+- High scores saved to the AT Protocol
+- Arrow keys on desktop, swipe on mobile
 
-## Getting Started
-
-To get a local copy up and running, follow these simple steps.
-
-### Prerequisites
-
-- Node.js (LTS recommended)
-- npm (comes with Node.js)
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/ewanc26/atproto-snake.git
-   cd atproto-snake
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-### Running the Development Server
+## Getting started
 
 ```bash
+git clone https://github.com/ewanc26/atproto-snake.git
+cd atproto-snake
+npm install
 npm run dev
 ```
 
-This will start the development server, usually at `http://localhost:5173`.
-
-### Building for Production
+### Build
 
 ```bash
 npm run build
 ```
 
-This will create a `build` directory with the production-ready files.
+## How to play
 
-## How to Play
+1. Log in with your AT Protocol handle, app password, and optional PDS URL
+2. Arrow keys to steer the snake
+3. Eat the food (green squares), grow longer, don't hit walls or yourself
+4. Score auto-submits if it's greater than zero
 
-1. **Login**: Enter your AT Protocol handle (e.g., `yourhandle.bsky.social`), app password, and optionally your PDS URL on the login page.
-2. **Start Game**: Once logged in, the game will start after a short countdown.
-3. **Controls**: Use the arrow keys (Up, Down, Left, Right) on your keyboard to control the snake. On touch devices, swipe in the desired direction.
-4. **Objective**: Guide the snake to eat the food (green squares) to grow longer and increase your score. Avoid hitting the walls or your own tail.
-5. **Game Over**: The game ends when the snake hits a wall or its own tail. Your score will be automatically submitted to the AT Protocol if it's greater than zero.
+## Project layout
 
-## Project Structure
+- `src/lib/auth/` — AT Protocol auth
+- `src/lib/snake/` — Game logic
+- `src/routes/` — Login and game pages
+- `src/lib/components/` — Reusable components
+- `static/client-metadata.json` — OAuth client metadata
 
-- `src/lib/auth/`: Contains all AT Protocol authentication logic.
-- `src/lib/snake/`: Core Snake game logic.
-- `src/routes/`: SvelteKit routes for different pages (login, game).
-- `src/lib/components/`: Reusable Svelte components.
-- `static/client-metadata.json`: OAuth client metadata for AT Protocol.
+## Licence
 
-## Technologies Used
-
-- [SvelteKit](https://kit.svelte.dev/): Web framework for building the frontend.
-- [AT Protocol](https://atproto.com/): Decentralised social networking protocol for authentication.
-- [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework for styling.
-- [Vite](https://vitejs.dev/): Next-generation frontend tooling.
-
-## License
-
-This project is open-source and available under the MIT License.
-
-## ☕ Support
-
-If you found this useful, consider [buying me a ko-fi](https://ko-fi.com/ewancroft)!
+MIT
