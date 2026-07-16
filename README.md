@@ -1,6 +1,8 @@
-# ATProto Snake Game
+# Snake for AT Protocol
 
 Snake game built with SvelteKit, auth via AT Protocol.
+
+> Independent project; see the [trademark notice](TRADEMARKS.md).
 
 > Also available on [Tangled](https://tangled.org/ewancroft.uk/atproto-snake)
 
