@@ -119,7 +119,13 @@
 
 				{#if tab === 'oauth'}
 					<!-- OAuth Form -->
-					<form on:submit|preventDefault={handleOAuthLogin} class="space-y-6">
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							handleOAuthLogin();
+						}}
+						class="space-y-6"
+					>
 						<div>
 							<label for="oauthHandle" class="mb-2 block text-sm font-medium text-gray-300">
 								AT Protocol Handle
@@ -128,7 +134,7 @@
 								type="text"
 								id="oauthHandle"
 								bind:value={oauthHandle}
-								on:keydown={handleInputKeydown}
+								onkeydown={handleInputKeydown}
 								placeholder="alice.bsky.social"
 								class="w-full rounded-xl border border-gray-600/50 bg-gray-700/50 p-4 text-white placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
 								disabled={isLoading}
@@ -164,7 +170,13 @@
 					</form>
 				{:else}
 					<!-- App Password Form -->
-					<form on:submit|preventDefault={handlePasswordLogin} class="space-y-6">
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							handlePasswordLogin();
+						}}
+						class="space-y-6"
+					>
 						<div>
 							<label for="identifier" class="mb-2 block text-sm font-medium text-gray-300">
 								AT Protocol Handle
@@ -173,7 +185,7 @@
 								type="text"
 								id="identifier"
 								bind:value={identifier}
-								on:keydown={handleInputKeydown}
+								onkeydown={handleInputKeydown}
 								placeholder="alice.bsky.social"
 								class="w-full rounded-xl border border-gray-600/50 bg-gray-700/50 p-4 text-white placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
 								disabled={isLoading}
@@ -189,7 +201,7 @@
 								type="password"
 								id="password"
 								bind:value={password}
-								on:keydown={handleInputKeydown}
+								onkeydown={handleInputKeydown}
 								placeholder="Your app password"
 								class="w-full rounded-xl border border-gray-600/50 bg-gray-700/50 p-4 text-white placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
 								disabled={isLoading}

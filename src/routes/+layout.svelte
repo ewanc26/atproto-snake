@@ -6,7 +6,7 @@
 	import { getStores } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { initOAuth, setAgent } from '$lib/auth/auth';
+	import { initAuth } from '$lib/auth/auth';
 	const { page } = getStores();
 
 	import Footer from '$lib/components/Footer.svelte';
@@ -16,19 +16,16 @@
 	let description = 'A classic Snake game built with SvelteKit and ATProto.';
 	let keywords = 'snake, game, svelte, sveltekit, atproto, web game';
 
-	// Initialise OAuth on mount - processes callbacks and restores sessions
+	// Initialise auth on mount - processes OAuth callbacks and restores sessions
 	onMount(async () => {
 		try {
-			const oauthAgent = await initOAuth();
-			if (oauthAgent) {
-				setAgent(oauthAgent, 'oauth');
-				// If on login page and now authenticated, redirect to game
-				if ($page.url.pathname === '/login') {
-					goto('/game');
-				}
+			const agent = await initAuth();
+			// If on login page and now authenticated, redirect to game
+			if (agent && $page.url.pathname === '/login') {
+				goto('/game');
 			}
 		} catch (e) {
-			console.error('OAuth init error:', e);
+			console.error('Auth init error:', e);
 		}
 	});
 
