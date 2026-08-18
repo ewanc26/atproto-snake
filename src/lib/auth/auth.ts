@@ -4,14 +4,15 @@
 // lexicon. Authentication flows through Slingshot identity
 // resolution or direct PDS browser OAuth.
 
-import { AtpAgent, type Agent } from '@atproto/api';
+import { Client } from '@atproto/lex';
+import { PasswordSession } from '@atproto/lex-password-session';
+import { app } from '@bsky/sdk/lexicons';
+import { com } from '@bsky/sdk/lexicons';
 import { goto } from '$app/navigation';
 import { initOAuth, signInWithOAuth } from './oauth';
 
-// Module-level agent reference, initialised on login or OAuth callback
-let agent: AtpAgent | Agent | null = null;
+let client: Client | null = null;
 
-// Tracks which auth method is active for display and logout behaviour
 let authType: 'oauth' | 'password' | null = null;
 
 interface ResolvedIdentity {
@@ -23,11 +24,6 @@ interface ResolvedIdentity {
 
 // ─── Identity Resolution ────────────────────────────────
 
-/**
- * Resolves an AT Protocol identifier (handle or DID) to get PDS information
- * using the Slingshot miniDoc resolver.
- * Throws if the identifier can't be resolved or the response is malformed.
- */
 async function resolveIdentifier(identifier: string): Promise<ResolvedIdentity> {
 	const response = await fetch(
 		`https://slingshot.microcosm.blue/xrpc/com.bad-example.identity.resolveMiniDoc?identifier=${encodeURIComponent(identifier)}`
@@ -48,34 +44,41 @@ async function resolveIdentifier(identifier: string): Promise<ResolvedIdentity> 
 
 // ─── Initialisation ─────────────────────────────────────
 
-/**
- * Initialize authentication on page load.
- * Tries OAuth first, then falls back to stored app password session.
- * Returns Agent if logged in, null if needs to sign in.
- */
-export async function initAuth(): Promise<Agent | null> {
-	// Try OAuth first
+export async function initAuth(): Promise<Client | null> {
 	try {
-		const oauthAgent = await initOAuth();
-		if (oauthAgent) {
-			agent = oauthAgent;
+		const oauthClient = await initOAuth();
+		if (oauthClient) {
+			client = oauthClient;
 			authType = 'oauth';
-			return oauthAgent;
+			return oauthClient;
 		}
 	} catch (e) {
 		console.log('OAuth init failed, checking for app password session:', e);
 	}
 
-	// Fall back to app password session from localStorage
 	const storedData = localStorage.getItem('atproto_session');
 	if (storedData) {
 		try {
 			const parsedData = JSON.parse(storedData);
-			if (parsedData.session) {
-				agent = new AtpAgent({ service: parsedData.pdsUrl });
-				await agent.resumeSession(parsedData.session);
+			if (parsedData.session && parsedData.pdsUrl) {
+				const session = PasswordSession.resume(parsedData.session, {
+					onUpdated: (saved) => {
+						localStorage.setItem(
+							'atproto_session',
+							JSON.stringify({
+								session: saved,
+								pdsUrl: parsedData.pdsUrl,
+								resolvedData: parsedData.resolvedData
+							})
+						);
+					},
+					onDeleted: () => {
+						localStorage.removeItem('atproto_session');
+					}
+				});
+				client = new Client(session, { service: parsedData.pdsUrl });
 				authType = 'password';
-				return agent;
+				return client;
 			}
 		} catch (e) {
 			console.error('Failed to restore app password session:', e);
@@ -88,58 +91,44 @@ export async function initAuth(): Promise<Agent | null> {
 
 // ─── Login ──────────────────────────────────────────────
 
-/**
- * Login with OAuth - redirects browser to PDS for auth.
- */
 export async function loginWithOAuth(handle: string): Promise<never> {
 	await signInWithOAuth(handle);
 }
 
-/**
- * Logs in a user with their AT Protocol handle/DID and app password.
- * Automatically resolves the PDS URL using Slingshot.
- */
 export async function login(identifier: string, password: string): Promise<void> {
 	try {
-		// Resolve the identifier to get PDS and other info
 		const resolved = await resolveIdentifier(identifier);
 
-		// Initialize the agent with the resolved PDS URL
-		agent = new AtpAgent({
-			service: resolved.pds
-		});
+		const session = await PasswordSession.create(
+			resolved.did || identifier,
+			password,
+			resolved.pds
+		);
 
-		// Attempt to login using the resolved DID or original identifier
-		await agent.login({
-			identifier: resolved.did,
-			password: password
-		});
+		client = new Client(session, { service: resolved.pds });
 
-		// Store session details with resolved information
 		localStorage.setItem(
 			'atproto_session',
 			JSON.stringify({
-				session: agent.session,
+				session: session.data,
 				pdsUrl: resolved.pds,
 				resolvedData: resolved
 			})
 		);
 		authType = 'password';
 
-		// Redirect to the game page on successful login
 		goto('/game');
 	} catch (e: any) {
 		console.error('Login failed:', e);
 		localStorage.removeItem('atproto_session');
 
-		// Provide more specific error messages
-		if (e.message.includes('Failed to resolve identifier')) {
+		if (e.message?.includes('Failed to resolve identifier')) {
 			throw new Error('Handle not found. Please check your AT Protocol handle.');
-		} else if (e.message.includes('AuthFactorTokenRequired')) {
+		} else if (e.message?.includes('AuthFactorTokenRequired')) {
 			throw new Error('Two-factor authentication required. Please use your app password.');
-		} else if (e.message.includes('AccountTakedown') || e.message.includes('AccountSuspended')) {
+		} else if (e.message?.includes('AccountTakedown') || e.message?.includes('AccountSuspended')) {
 			throw new Error('Account is suspended or has been taken down.');
-		} else if (e.message.includes('InvalidCredentials')) {
+		} else if (e.message?.includes('InvalidCredentials')) {
 			throw new Error('Invalid credentials. Please check your handle and app password.');
 		} else {
 			throw new Error(`Login failed: ${e.message || 'Unknown error'}`);
@@ -149,38 +138,30 @@ export async function login(identifier: string, password: string): Promise<void>
 
 // ─── Session Management ─────────────────────────────────
 
-/**
- * Checks if a user is currently logged in.
- */
 export function isLoggedIn(): boolean {
-	if (agent?.session) {
+	if (client?.session) {
 		return true;
 	}
 	const session = localStorage.getItem('atproto_session');
 	return !!session;
 }
 
-/**
- * Get the current auth type.
- */
 export function getAuthType(): 'oauth' | 'password' | null {
 	return authType;
 }
 
-/**
- * Refreshes the current user session.
- */
 export async function refreshSession(): Promise<void> {
-	let currentSession = agent?.session;
 	let pdsServiceUrl: string | undefined;
 
-	// If no active agent session, try to load from local storage
-	if (!currentSession) {
+	if (client?.session) {
+		pdsServiceUrl = (client as any).service?.toString?.() || (client as any)._service;
+	}
+
+	if (!pdsServiceUrl) {
 		const storedData = localStorage.getItem('atproto_session');
 		if (storedData) {
 			try {
 				const parsedData = JSON.parse(storedData);
-				currentSession = parsedData.session;
 				pdsServiceUrl = parsedData.pdsUrl;
 			} catch (e) {
 				console.error('Failed to parse stored session:', e);
@@ -188,25 +169,39 @@ export async function refreshSession(): Promise<void> {
 				throw new Error('Invalid stored session. Please log in again.');
 			}
 		}
-	} else if (agent?.service) {
-		pdsServiceUrl = agent.service.toString();
 	}
 
-	if (!currentSession || !pdsServiceUrl) {
+	if (!client?.session || !pdsServiceUrl) {
 		throw new Error('No session or PDS URL found to refresh.');
 	}
 
-	// Ensure agent is initialized with the current PDS
-	if (!agent || agent.service?.toString() !== pdsServiceUrl) {
-		agent = new AtpAgent({
-			service: pdsServiceUrl
-		});
-	}
-
 	try {
-		await agent.resumeSession(currentSession);
+		const currentService = (client as any)._service || (client as any).service;
+		if (currentService !== pdsServiceUrl) {
+			const storedData = localStorage.getItem('atproto_session');
+			if (storedData) {
+				const parsedData = JSON.parse(storedData);
+				const session = PasswordSession.resume(parsedData.session, {
+					onUpdated: (saved) => {
+						localStorage.setItem(
+							'atproto_session',
+							JSON.stringify({
+								session: saved,
+								pdsUrl: parsedData.pdsUrl,
+								resolvedData: parsedData.resolvedData
+							})
+						);
+					},
+					onDeleted: () => {
+						localStorage.removeItem('atproto_session');
+					}
+				});
+				client = new Client(session, { service: pdsServiceUrl });
+			}
+		}
 
-		// Update stored session
+		await client.refreshSession();
+
 		const storedData = localStorage.getItem('atproto_session');
 		if (storedData) {
 			const parsedData = JSON.parse(storedData);
@@ -214,7 +209,7 @@ export async function refreshSession(): Promise<void> {
 				'atproto_session',
 				JSON.stringify({
 					...parsedData,
-					session: agent.session
+					session: client.session
 				})
 			);
 		}
@@ -225,33 +220,21 @@ export async function refreshSession(): Promise<void> {
 	}
 }
 
-/**
- * Logs out the current user by clearing the session.
- */
 export function logout(): void {
-	agent = null;
+	client = null;
 	authType = null;
 	localStorage.removeItem('atproto_session');
 	goto('/login');
 }
 
-/**
- * Gets the current user's handle.
- */
 export function getCurrentUserHandle(): string | null {
-	return agent?.session?.handle || null;
+	return client?.session?.handle || null;
 }
 
-/**
- * Gets the current user's DID.
- */
 export function getCurrentUserDid(): string | null {
-	return agent?.session?.did || null;
+	return client?.session?.did || null;
 }
 
-/**
- * Gets the resolved identity data for the current user.
- */
 export function getCurrentUserResolvedData(): ResolvedIdentity | null {
 	const storedData = localStorage.getItem('atproto_session');
 	if (storedData) {
@@ -267,11 +250,8 @@ export function getCurrentUserResolvedData(): ResolvedIdentity | null {
 
 // ─── Profile & Score ───────────────────────────────────
 
-/**
- * Fetches the profile of a given user handle.
- */
 export async function getProfile(handle: string): Promise<any | null> {
-	if (!agent) {
+	if (!client) {
 		try {
 			await refreshSession();
 		} catch (e) {
@@ -280,32 +260,27 @@ export async function getProfile(handle: string): Promise<any | null> {
 		}
 	}
 
-	if (!agent) {
-		console.error('Agent is still not initialized after refresh attempt.');
+	if (!client) {
+		console.error('Client is still not initialized after refresh attempt.');
 		return null;
 	}
 
 	try {
-		const response = await agent.getProfile({ actor: handle });
-		return response.data;
+		return await client.call(app.bsky.actor.getProfile, { actor: handle });
 	} catch (e) {
 		console.error(`Failed to fetch profile for ${handle}:`, e);
 		return null;
 	}
 }
 
-/**
- * Submits the user's score as an AT Protocol record under
- * the uk.ewancroft.snake.score collection on the user's repo.
- */
 export async function submitScore(score: number): Promise<void> {
-	if (!agent || !agent.session) {
+	if (!client || !client.session) {
 		throw new Error('Not logged in. Cannot submit score.');
 	}
 
 	try {
-		await agent.com.atproto.repo.createRecord({
-			repo: agent.session.did,
+		await client.call(com.atproto.repo.createRecord, {
+			repo: client.session.did,
 			collection: 'uk.ewancroft.snake.score',
 			record: {
 				$type: 'uk.ewancroft.snake.score',
@@ -320,9 +295,6 @@ export async function submitScore(score: number): Promise<void> {
 	}
 }
 
-/**
- * Gets the current agent for direct use.
- */
-export function getAgent(): AtpAgent | Agent | null {
-	return agent;
+export function getAgent(): Client | null {
+	return client;
 }

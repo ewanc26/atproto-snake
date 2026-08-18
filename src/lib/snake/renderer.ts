@@ -1,178 +1,297 @@
 // ── Canvas Renderer ─────────────────────────────────────────
-// Handles all drawing for the Snake game: the grid, snake body
-// (with head and eye detail), food, grace-period overlay, and
-// the death animation sequence.
+// Handles all drawing for the Snake game: the background grid,
+// snake body (with a directional glowing head), food, the
+// grace-period flash, and the death animation sequence.
+//
+// The background/grid/grace-flash colors are the same OKLCH tokens as
+// the surrounding UI chrome (app.css) so the canvas reads as part of
+// the same warm design system rather than a separate cool-gray layer.
+// Snake/food keep the green/red game convention regardless of theme.
 
 import { GRID_SIZE, DEATH_ANIMATION_SPEED } from './constants';
 import { Snake } from './snake';
 import { Food } from './food';
+import type { Position } from './types';
+
+const COLOR_BG_TOP = 'oklch(20.5% 0.038 70.3)'; // --color-canvas-900
+const COLOR_BG_BOTTOM = 'oklch(17.3% 0.03 70.3)'; // --color-canvas-950
+const COLOR_GRID_LINE = 'oklch(90% 0.02 70.3 / 0.05)';
+const COLOR_GRACE_OVERLAY = 'oklch(69.5% 0.157 70.3 / 0.1)'; // --color-gold-500 — "wait", not "danger"
+
+const COLOR_HEAD = '#4ade80'; // green-400
+const COLOR_HEAD_OUTLINE = '#166534'; // green-800
+const COLOR_HEAD_GLOW = 'rgba(74, 222, 128, 0.65)';
+const COLOR_BODY_START = '#22c55e'; // green-500
+const COLOR_BODY_END = '#14532d'; // green-900
+const COLOR_EYE = '#052e16';
+
+const COLOR_FOOD_CORE = '#f87171'; // red-400
+const COLOR_FOOD_EDGE = '#b91c1c'; // red-700
+const COLOR_FOOD_GLOW = 'rgba(248, 113, 113, 0.7)';
+const COLOR_FOOD_SHINE = 'rgba(255, 255, 255, 0.75)';
 
 export class GameRenderer {
-    private ctx: CanvasRenderingContext2D;
-    private canvas: HTMLCanvasElement;
-    private snake!: Snake;
-    private food!: Food;
+	private ctx: CanvasRenderingContext2D;
+	private canvas: HTMLCanvasElement;
+	private snake!: Snake;
+	private food!: Food;
+	private backgroundGradient?: CanvasGradient;
 
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d')!;
-        this.ctx.imageSmoothingEnabled = false;
+	constructor(canvas: HTMLCanvasElement) {
+		this.canvas = canvas;
+		this.ctx = canvas.getContext('2d')!;
+		this.ctx.imageSmoothingEnabled = false;
 
-        this.resizeCanvas();
+		this.resizeCanvas();
 
-        window.addEventListener('resize', () => {
-            this.resizeCanvas();
-            // Redraw with current game state after resizing
-            if (this.snake && this.food) {
-                this.draw(this.snake, this.food);
-            }
-        });
-    }
+		window.addEventListener('resize', () => {
+			this.resizeCanvas();
+			// Redraw with current game state after resizing
+			if (this.snake && this.food) {
+				this.draw(this.snake, this.food);
+			}
+		});
+	}
 
-    private resizeCanvas() {
-        const containerWidth = window.innerWidth;
-        const containerHeight = window.innerHeight;
+	private resizeCanvas() {
+		const containerWidth = window.innerWidth;
+		const containerHeight = window.innerHeight;
 
-        const size = Math.min(containerWidth, containerHeight);
-        this.canvas.width = size;
-        this.canvas.height = size;
-    }
+		const size = Math.min(containerWidth, containerHeight);
+		this.canvas.width = size;
+		this.canvas.height = size;
+		this.backgroundGradient = undefined;
+	}
 
-    // ─── Layout ────────────────────────────────────────────
+	// ─── Layout ────────────────────────────────────────────
 
-    private get tileSize(): number {
-        return this.canvas.width / GRID_SIZE;
-    }
+	private get tileSize(): number {
+		return this.canvas.width / GRID_SIZE;
+	}
 
-    // Segment drawn slightly smaller than tile for visual breathing room
-    private get segmentSize(): number {
-        return this.tileSize * 0.9;
-    }
+	// Segment drawn slightly smaller than tile for visual breathing room
+	private get segmentSize(): number {
+		return this.tileSize * 0.9;
+	}
 
-    // ─── Drawing ───────────────────────────────────────────
+	// ─── Drawing ───────────────────────────────────────────
 
-    public draw(snake: Snake, food: Food, gracePeriodActive: boolean = false, segmentsToDraw?: number): void {
-        this.snake = snake;
-        this.food = food;
+	public draw(
+		snake: Snake,
+		food: Food,
+		gracePeriodActive: boolean = false,
+		segmentsToDraw?: number
+	): void {
+		this.snake = snake;
+		this.food = food;
 
-        this.clearCanvas();
+		this.clearCanvas();
 
-        if (gracePeriodActive) {
-            this.drawGracePeriodOverlay();
-        }
+		if (gracePeriodActive) {
+			this.drawGracePeriodOverlay();
+		}
 
-        this.drawSnake(snake, segmentsToDraw);
-        this.drawFood(food);
-    }
+		this.drawFood(food);
+		this.drawSnake(snake, segmentsToDraw);
+	}
 
-    private clearCanvas(): void {
-        this.ctx.fillStyle = '#000000';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    }
+	private clearCanvas(): void {
+		if (!this.backgroundGradient) {
+			const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+			gradient.addColorStop(0, COLOR_BG_TOP);
+			gradient.addColorStop(1, COLOR_BG_BOTTOM);
+			this.backgroundGradient = gradient;
+		}
 
-    // Flashes briefly after game start so the player can orient themselves
-    private drawGracePeriodOverlay(): void {
-        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    }
+		this.ctx.fillStyle = this.backgroundGradient;
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		this.drawGrid();
+	}
 
-    private drawSnake(snake: Snake, segmentsToDraw?: number): void {
-        const offset = (this.tileSize - this.segmentSize) / 2;
+	private drawGrid(): void {
+		this.ctx.strokeStyle = COLOR_GRID_LINE;
+		this.ctx.lineWidth = 1;
 
-        const bodyToDraw = segmentsToDraw !== undefined ? snake.body.slice(0, segmentsToDraw) : snake.body;
+		for (let i = 1; i < GRID_SIZE; i++) {
+			const pos = Math.round(i * this.tileSize) + 0.5;
 
-        bodyToDraw.forEach((segment, index) => {
-            const x = segment.x * this.tileSize + offset;
-            const y = segment.y * this.tileSize + offset;
+			this.ctx.beginPath();
+			this.ctx.moveTo(pos, 0);
+			this.ctx.lineTo(pos, this.canvas.height);
+			this.ctx.stroke();
 
-            if (index === 0) {
-                // Head
-                this.ctx.fillStyle = '#004400';
-                this.ctx.fillRect(x, y, this.segmentSize, this.segmentSize);
+			this.ctx.beginPath();
+			this.ctx.moveTo(0, pos);
+			this.ctx.lineTo(this.canvas.width, pos);
+			this.ctx.stroke();
+		}
+	}
 
-                this.ctx.fillStyle = '#FFFFFF';
-                const eyeSize = this.segmentSize * 0.17;
-                const eyeOffset = this.segmentSize * 0.22;
-                this.ctx.fillRect(x + eyeOffset, y + eyeOffset, eyeSize, eyeSize);
-                this.ctx.fillRect(x + this.segmentSize - eyeOffset - eyeSize, y + eyeOffset, eyeSize, eyeSize);
-            } else {
-                // Body with fading effect
-                const alpha = Math.max(0.6, 1 - (index * 0.02));
-                this.ctx.fillStyle = `rgba(0, 255, 0, ${alpha})`;
-                this.ctx.fillRect(x, y, this.segmentSize, this.segmentSize);
-            }
-        });
-    }
+	// Flashes briefly after game start so the player can orient themselves
+	private drawGracePeriodOverlay(): void {
+		this.ctx.fillStyle = COLOR_GRACE_OVERLAY;
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+	}
 
-    private drawFood(food: Food): void {
-        const x = food.position.x * this.tileSize;
-        const y = food.position.y * this.tileSize;
+	private drawSnake(snake: Snake, segmentsToDraw?: number): void {
+		const offset = (this.tileSize - this.segmentSize) / 2;
+		const bodyToDraw =
+			segmentsToDraw !== undefined ? snake.body.slice(0, segmentsToDraw) : snake.body;
+		const radius = this.segmentSize * 0.3;
 
-        this.ctx.fillStyle = '#FF0000';
-        this.ctx.fillRect(x + this.tileSize * 0.1, y + this.tileSize * 0.1, this.tileSize * 0.8, this.tileSize * 0.8);
+		// Draw tail-to-head so nothing overlaps the head's glow
+		for (let index = bodyToDraw.length - 1; index >= 0; index--) {
+			const segment = bodyToDraw[index];
+			const x = segment.x * this.tileSize + offset;
+			const y = segment.y * this.tileSize + offset;
 
-        this.ctx.fillStyle = '#FF6666';
-        this.ctx.fillRect(x + this.tileSize * 0.2, y + this.tileSize * 0.2, this.tileSize * 0.2, this.tileSize * 0.2);
-    }
+			if (index === 0) {
+				this.drawHead(x, y, bodyToDraw[1]);
+			} else {
+				this.ctx.globalAlpha = Math.max(0.35, 1 - index * 0.025);
+				this.ctx.fillStyle = this.bodyColorAt(index, bodyToDraw.length);
+				this.roundRect(x, y, this.segmentSize, this.segmentSize, radius);
+				this.ctx.fill();
+				this.ctx.globalAlpha = 1;
+			}
+		}
+	}
 
-    /**
-     * Draws the game over screen with score and restart instructions.
-     * @param score The final score to display.
-     */
-    /**
-     * Draws the game over state, including a death animation and final score.
-     * @param finalScore The player's score at the end of the game.
-     * @param callback An optional callback function to execute after the animation completes.
-     */
-    public drawGameOver(finalScore: number, callback?: () => void): void {
-        this.stopDeathAnimation(); // Ensure any previous animation is stopped
-        const initialSnakeLength = this.snake.body.length;
-        this.deathAnimationStep = initialSnakeLength;
+	// Fades from bright green at the neck to a deep, near-black green at the tail
+	private bodyColorAt(index: number, total: number): string {
+		const t = total > 1 ? index / total : 0;
+		return this.lerpColor(COLOR_BODY_START, COLOR_BODY_END, t);
+	}
 
-        this.deathAnimationInterval = window.setInterval(() => {
-            this.deathAnimationStep--;
-            if (this.deathAnimationStep >= 0) {
-                this.draw(this.snake, this.food, false, this.deathAnimationStep);
-            } else {
-                this.stopDeathAnimation();
-                this.clearCanvas(); // Clear the canvas entirely to remove the snake
-                if (callback) {
-                    callback();
-                }
-            }
-        }, DEATH_ANIMATION_SPEED);
-    }
+	private drawHead(x: number, y: number, neck?: Position): void {
+		const headRadius = this.segmentSize * 0.35;
 
-    private deathAnimationInterval?: number;
-    private deathAnimationStep: number = 0;
+		this.ctx.save();
+		this.ctx.shadowColor = COLOR_HEAD_GLOW;
+		this.ctx.shadowBlur = this.segmentSize * 0.4;
+		this.ctx.fillStyle = COLOR_HEAD;
+		this.roundRect(x, y, this.segmentSize, this.segmentSize, headRadius);
+		this.ctx.fill();
+		this.ctx.restore();
 
-    // Legacy — animation is now handled inline in drawGameOver
-    private drawDeathAnimation(): void {
-        // This method is no longer used for the new death animation.
-        // The animation logic is now directly within drawGameOver.
-    }
+		this.ctx.strokeStyle = COLOR_HEAD_OUTLINE;
+		this.ctx.lineWidth = Math.max(1, this.segmentSize * 0.05);
+		this.roundRect(x, y, this.segmentSize, this.segmentSize, headRadius);
+		this.ctx.stroke();
 
-    // ─── Death Animation ──────────────────────────────────
+		this.drawEyes(x, y, neck);
+	}
 
-    private stopDeathAnimation(): void {
-        if (this.deathAnimationInterval) {
-            clearInterval(this.deathAnimationInterval);
-            this.deathAnimationInterval = undefined;
-            this.deathAnimationStep = 0;
-        }
-    }
+	// Eyes sit on the leading edge of the head, oriented by travel
+	// direction (derived from the head's position relative to the neck).
+	private drawEyes(x: number, y: number, neck?: Position): void {
+		let dx = 1;
+		let dy = 0;
 
-    private drawScoreOverlay(score: number): void {
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(0, this.canvas.height / 3, this.canvas.width, this.canvas.height / 3);
+		if (neck) {
+			dx = Math.sign(this.snake.head.x - neck.x);
+			dy = Math.sign(this.snake.head.y - neck.y);
+			if (dx === 0 && dy === 0) dx = 1;
+		}
 
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = 'bold ' + (this.canvas.width / 10) + 'px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('Game Over!', this.canvas.width / 2, this.canvas.height / 2 - (this.canvas.width / 20));
+		const eyeSize = this.segmentSize * 0.16;
+		const forward = this.segmentSize * 0.28;
+		const spread = this.segmentSize * 0.22;
+		const cx = x + this.segmentSize / 2 + dx * forward;
+		const cy = y + this.segmentSize / 2 + dy * forward;
+		const perpX = dy !== 0 ? spread : 0;
+		const perpY = dx !== 0 ? spread : 0;
 
-        this.ctx.font = (this.canvas.width / 20) + 'px Arial';
-        this.ctx.fillText(`Score: ${score}`, this.canvas.width / 2, this.canvas.height / 2 + (this.canvas.width / 20));
-    }
+		this.ctx.fillStyle = COLOR_EYE;
+		[-1, 1].forEach((side) => {
+			this.ctx.beginPath();
+			this.ctx.arc(cx + side * perpX, cy + side * perpY, eyeSize, 0, Math.PI * 2);
+			this.ctx.fill();
+		});
+	}
+
+	private drawFood(food: Food): void {
+		const cx = food.position.x * this.tileSize + this.tileSize / 2;
+		const cy = food.position.y * this.tileSize + this.tileSize / 2;
+		const r = this.tileSize * 0.36;
+
+		this.ctx.save();
+		this.ctx.shadowColor = COLOR_FOOD_GLOW;
+		this.ctx.shadowBlur = this.tileSize * 0.35;
+
+		const gradient = this.ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, r);
+		gradient.addColorStop(0, COLOR_FOOD_CORE);
+		gradient.addColorStop(1, COLOR_FOOD_EDGE);
+		this.ctx.fillStyle = gradient;
+		this.ctx.beginPath();
+		this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
+		this.ctx.fill();
+		this.ctx.restore();
+
+		this.ctx.fillStyle = COLOR_FOOD_SHINE;
+		this.ctx.beginPath();
+		this.ctx.arc(cx - r * 0.35, cy - r * 0.35, r * 0.18, 0, Math.PI * 2);
+		this.ctx.fill();
+	}
+
+	// ─── Shape Helpers ─────────────────────────────────────
+
+	private roundRect(x: number, y: number, w: number, h: number, r: number): void {
+		this.ctx.beginPath();
+		this.ctx.moveTo(x + r, y);
+		this.ctx.arcTo(x + w, y, x + w, y + h, r);
+		this.ctx.arcTo(x + w, y + h, x, y + h, r);
+		this.ctx.arcTo(x, y + h, x, y, r);
+		this.ctx.arcTo(x, y, x + w, y, r);
+		this.ctx.closePath();
+	}
+
+	private lerpColor(from: string, to: string, t: number): string {
+		const a = this.hexToRgb(from);
+		const b = this.hexToRgb(to);
+		const r = Math.round(a.r + (b.r - a.r) * t);
+		const g = Math.round(a.g + (b.g - a.g) * t);
+		const bl = Math.round(a.b + (b.b - a.b) * t);
+		return `rgb(${r}, ${g}, ${bl})`;
+	}
+
+	private hexToRgb(hex: string): { r: number; g: number; b: number } {
+		const int = parseInt(hex.slice(1), 16);
+		return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+	}
+
+	// ─── Death Animation ──────────────────────────────────
+
+	private deathAnimationInterval?: number;
+	private deathAnimationStep: number = 0;
+
+	/**
+	 * Shrinks the snake segment by segment, then invokes the callback
+	 * once the canvas is clear.
+	 */
+	public drawGameOver(callback?: () => void): void {
+		this.stopDeathAnimation(); // Ensure any previous animation is stopped
+		this.deathAnimationStep = this.snake.body.length;
+
+		this.deathAnimationInterval = window.setInterval(() => {
+			this.deathAnimationStep--;
+			if (this.deathAnimationStep >= 0) {
+				this.draw(this.snake, this.food, false, this.deathAnimationStep);
+			} else {
+				this.stopDeathAnimation();
+				this.clearCanvas(); // Clear the canvas entirely to remove the snake
+				if (callback) {
+					callback();
+				}
+			}
+		}, DEATH_ANIMATION_SPEED);
+	}
+
+	private stopDeathAnimation(): void {
+		if (this.deathAnimationInterval) {
+			clearInterval(this.deathAnimationInterval);
+			this.deathAnimationInterval = undefined;
+			this.deathAnimationStep = 0;
+		}
+	}
 }
