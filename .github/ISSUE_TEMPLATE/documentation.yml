@@ -1,7 +1,7 @@
 name: Documentation
 description: Report missing or incorrect documentation
-title: "[Docs]: "
-labels: ["documentation"]
+title: '[Docs]: '
+labels: ['documentation']
 body:
   - type: textarea
     id: what

@@ -1,3 +1,54 @@
 /* ── Global Styles ─────────────────────────────────────────── */
 /* Tailwind v4 entry point */
 @import 'tailwindcss';
+
+/* Self-hosted variable fonts — matches the type system used across
+   ewancroft.uk: Inter for body/display text, JetBrains Mono for
+   nav links, metadata rows, and other small UI text. */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+
+/* ── Design Tokens ─────────────────────────────────────────── */
+/* A warm, near-black palette on a single amber hue (~70°) for
+   neutrals, with a red-orange hue (~25°) reserved for destructive/
+   attention states — the same OKLCH system as the rest of the site. */
+@theme {
+	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', monospace;
+
+	/* Surfaces */
+	--color-canvas-950: oklch(17.3% 0.03 70.3);
+	--color-canvas-900: oklch(20.5% 0.038 70.3);
+	--color-canvas-800: oklch(24.8% 0.054 70.3);
+	--color-canvas-700: oklch(28.5% 0.065 70.3);
+	--color-canvas-line: oklch(37.9% 0.091 70.3);
+
+	/* Ink (text) */
+	--color-ink-950: oklch(96.7% 0.012 70.3);
+	--color-ink-900: oklch(93.5% 0.026 70.3);
+	--color-ink-700: oklch(81.3% 0.096 70.3);
+	--color-ink-500: oklch(67.7% 0.132 70.3);
+	--color-ink-400: oklch(57.6% 0.11 70.3);
+
+	/* Gold — primary accent */
+	--color-gold-300: oklch(87.4% 0.063 70.3);
+	--color-gold-400: oklch(75.3% 0.128 70.3);
+	--color-gold-500: oklch(69.5% 0.157 70.3);
+	--color-gold-600: oklch(59% 0.131 70.3);
+
+	/* Ember — secondary / destructive accent */
+	--color-ember-400: oklch(76.1% 0.139 24.7);
+	--color-ember-500: oklch(70.6% 0.17 24.7);
+	--color-ember-600: oklch(59.9% 0.142 24.7);
+
+	--radius-xs: 4px;
+	--radius-sm: 6px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 24px;
+}
+
+body {
+	background-color: var(--color-canvas-950);
+	color: var(--color-ink-900);
+}

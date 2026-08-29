@@ -16,9 +16,9 @@
 	});
 </script>
 
-<div class="flex min-h-screen flex-col items-center justify-center bg-gray-800 text-white">
+<div class="bg-canvas-950 text-ink-900 flex min-h-screen flex-col items-center justify-center">
 	<div class="text-center">
-		<div class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-green-500"></div>
-		<p class="text-lg">Loading...</p>
+		<div class="border-gold-500 mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2"></div>
+		<p class="text-ink-700 font-mono text-sm tracking-wide uppercase">Loading…</p>
 	</div>
 </div>
