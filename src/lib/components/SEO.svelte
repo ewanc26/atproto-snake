@@ -1,101 +1,97 @@
 <script lang="ts">
-    // SEO: manages <title> and meta tags (description, keywords, OG image).
-    // Restores original metadata when the component unmounts so page changes
-    // in a SPA don't leave stale tags behind.
-    import { onMount, onDestroy } from 'svelte';
-    import { page } from '$app/stores';
+	// SEO: manages <title> and meta tags (description, keywords, OG image).
+	// Restores original metadata when the component unmounts so page changes
+	// in a SPA don't leave stale tags behind.
+	import { onMount, onDestroy } from 'svelte';
+	import { page } from '$app/stores';
 
-    export let title: string = 'ATProto Snake Game';
-    export let description: string = 'A classic Snake game built with SvelteKit and ATProto.';
-    export let keywords: string = 'snake, game, svelte, sveltekit, atproto, web game';
-    export let ogImage: string = 'https://ewancroft.uk/embed/main.png'; // Default Open Graph image
+	export let title: string = 'ATProto Snake Game';
+	export let description: string = 'A classic Snake game built with SvelteKit and ATProto.';
+	export let keywords: string = 'snake, game, svelte, sveltekit, atproto, web game';
+	export let ogImage: string = 'https://ewancroft.uk/embed/main.png'; // Default Open Graph image
 
-    let originalTitle: string;
-    let originalDescription: HTMLMetaElement | null;
-    let originalKeywords: HTMLMetaElement | null;
-    let originalOgImage: HTMLMetaElement | null;
+	let originalTitle: string;
+	let originalDescription: HTMLMetaElement | null;
+	let originalKeywords: HTMLMetaElement | null;
+	let originalOgImage: HTMLMetaElement | null;
 
-    onMount(() => {
-        // Store original metadata to restore on component unmount
-        originalTitle = document.title;
-        originalDescription = document.querySelector('meta[name="description"]');
-        originalKeywords = document.querySelector('meta[name="keywords"]');
-        originalOgImage = document.querySelector('meta[property="og:image"]');
+	onMount(() => {
+		// Store original metadata to restore on component unmount
+		originalTitle = document.title;
+		originalDescription = document.querySelector('meta[name="description"]');
+		originalKeywords = document.querySelector('meta[name="keywords"]');
+		originalOgImage = document.querySelector('meta[property="og:image"]');
 
-        updateMetadata();
-    });
+		updateMetadata();
+	});
 
-    // Reactively update metadata when props or page store changes
-    $: {
-        title,
-        description,
-        keywords,
-        ogImage,
-        $page.url.pathname; // Trigger update on path change
-        // Only update metadata in the browser
-        if (typeof document !== 'undefined') {
-            updateMetadata();
-        }
-    }
+	// Reactively update metadata when props or page store changes
+	$: {
+		(title, description, keywords, ogImage, $page.url.pathname); // Trigger update on path change
+		// Only update metadata in the browser
+		if (typeof document !== 'undefined') {
+			updateMetadata();
+		}
+	}
 
-    /**
-     * Updates the document's metadata (title, description, keywords, Open Graph image).
-     */
-    function updateMetadata(): void {
-        // Ensure this runs only in the browser
-        if (typeof document === 'undefined') {
-            return;
-        }
+	/**
+	 * Updates the document's metadata (title, description, keywords, Open Graph image).
+	 */
+	function updateMetadata(): void {
+		// Ensure this runs only in the browser
+		if (typeof document === 'undefined') {
+			return;
+		}
 
-        document.title = title;
+		document.title = title;
 
-        let metaDescription = document.querySelector('meta[name="description"]');
-        if (!metaDescription) {
-            metaDescription = document.createElement('meta');
-            metaDescription.setAttribute('name', 'description');
-            document.head.appendChild(metaDescription);
-        }
-        metaDescription.setAttribute('content', description);
+		let metaDescription = document.querySelector('meta[name="description"]');
+		if (!metaDescription) {
+			metaDescription = document.createElement('meta');
+			metaDescription.setAttribute('name', 'description');
+			document.head.appendChild(metaDescription);
+		}
+		metaDescription.setAttribute('content', description);
 
-        let metaKeywords = document.querySelector('meta[name="keywords"]');
-        if (!metaKeywords) {
-            metaKeywords = document.createElement('meta');
-            metaKeywords.setAttribute('name', 'keywords');
-            document.head.appendChild(metaKeywords);
-        }
-        metaKeywords.setAttribute('content', keywords);
+		let metaKeywords = document.querySelector('meta[name="keywords"]');
+		if (!metaKeywords) {
+			metaKeywords = document.createElement('meta');
+			metaKeywords.setAttribute('name', 'keywords');
+			document.head.appendChild(metaKeywords);
+		}
+		metaKeywords.setAttribute('content', keywords);
 
-        let metaOgImage = document.querySelector('meta[property="og:image"]');
-        if (!metaOgImage) {
-            metaOgImage = document.createElement('meta');
-            metaOgImage.setAttribute('property', 'og:image');
-            document.head.appendChild(metaOgImage);
-        }
-        metaOgImage.setAttribute('content', ogImage);
-    }
+		let metaOgImage = document.querySelector('meta[property="og:image"]');
+		if (!metaOgImage) {
+			metaOgImage = document.createElement('meta');
+			metaOgImage.setAttribute('property', 'og:image');
+			document.head.appendChild(metaOgImage);
+		}
+		metaOgImage.setAttribute('content', ogImage);
+	}
 
-    onDestroy(() => {
-        // Ensure this runs only in the browser
-        if (typeof document === 'undefined') {
-            return;
-        }
+	onDestroy(() => {
+		// Ensure this runs only in the browser
+		if (typeof document === 'undefined') {
+			return;
+		}
 
-        // Restore original metadata when component is destroyed
-        document.title = originalTitle;
-        if (originalDescription) {
-            document.head.appendChild(originalDescription);
-        } else {
-            document.querySelector('meta[name="description"]')?.remove();
-        }
-        if (originalKeywords) {
-            document.head.appendChild(originalKeywords);
-        } else {
-            document.querySelector('meta[name="keywords"]')?.remove();
-        }
-        if (originalOgImage) {
-            document.head.appendChild(originalOgImage);
-        } else {
-            document.querySelector('meta[property="og:image"]')?.remove();
-        }
-    });
+		// Restore original metadata when component is destroyed
+		document.title = originalTitle;
+		if (originalDescription) {
+			document.head.appendChild(originalDescription);
+		} else {
+			document.querySelector('meta[name="description"]')?.remove();
+		}
+		if (originalKeywords) {
+			document.head.appendChild(originalKeywords);
+		} else {
+			document.querySelector('meta[name="keywords"]')?.remove();
+		}
+		if (originalOgImage) {
+			document.head.appendChild(originalOgImage);
+		} else {
+			document.querySelector('meta[property="og:image"]')?.remove();
+		}
+	});
 </script>

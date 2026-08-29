@@ -10,6 +10,7 @@
 	const { page } = getStores();
 
 	import Footer from '$lib/components/Footer.svelte';
+	import Nav from '$lib/components/Nav.svelte';
 
 	// ── Route-Specific SEO ────────────────────────────────
 	let title = 'ATProto Snake Game';
@@ -48,8 +49,10 @@
 
 <SEO {title} {description} {keywords} />
 
+<Nav />
+
 <!-- Main content with proper spacing to avoid footer overlap -->
-<main class="relative min-h-screen">
+<main class="bg-canvas-950 relative min-h-screen">
 	<slot />
 </main>
 

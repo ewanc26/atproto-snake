@@ -6,11 +6,11 @@
 	import { goto } from '$app/navigation';
 
 	let tab = $state<'oauth' | 'password'>('oauth');
-	let identifier = '';
-	let oauthHandle = '';
-	let password = '';
-	let errorMessage = '';
-	let isLoading = false;
+	let identifier = $state('');
+	let oauthHandle = $state('');
+	let password = $state('');
+	let errorMessage = $state('');
+	let isLoading = $state(false);
 
 	onMount(async () => {
 		const agent = await initAuth();
@@ -69,33 +69,29 @@
 	}
 </script>
 
-<div
-	class="flex min-h-screen flex-col justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white"
->
+<div class="bg-canvas-950 text-ink-900 flex min-h-screen flex-col justify-center">
 	<div class="flex flex-1 items-center justify-center px-4 py-8 pb-20">
 		<div class="w-full max-w-md">
 			<!-- Header Section -->
 			<div class="mb-8 text-center">
-				<div class="mb-6">
-					<h1
-						class="mb-4 bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl"
-					>
-						Snake Game
-					</h1>
-					<p class="text-lg text-gray-300">Sign in with your AT Protocol account</p>
-				</div>
+				<h1
+					class="text-ink-950 mb-3 inline-flex items-center gap-2 text-4xl font-extrabold sm:text-5xl"
+				>
+					Sign in
+					<span class="bg-gold-500 h-2.5 w-2.5 rounded-full" aria-hidden="true"></span>
+				</h1>
+				<p class="text-ink-700 text-lg">Use your AT Protocol account to play</p>
 			</div>
 
 			<!-- Login Form -->
-			<div
-				class="rounded-2xl border border-gray-700/50 bg-gray-800/80 p-8 shadow-2xl backdrop-blur-sm"
-			>
+			<div class="border-canvas-line bg-canvas-800 rounded-lg border p-8">
 				<!-- Tabs -->
-				<div class="mb-6 flex gap-2">
+				<div class="bg-canvas-900 mb-6 flex gap-1 rounded-full p-1">
 					<button
-						class="flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all {tab === 'oauth'
-							? 'bg-green-600 text-white'
-							: 'bg-gray-700/50 text-gray-400 hover:text-gray-200'}"
+						class="flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors {tab ===
+						'oauth'
+							? 'bg-gold-500 text-canvas-950'
+							: 'text-ink-500 hover:text-ink-900'}"
 						onclick={() => {
 							tab = 'oauth';
 							errorMessage = '';
@@ -104,10 +100,10 @@
 						OAuth <span class="text-xs opacity-75">Recommended</span>
 					</button>
 					<button
-						class="flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all {tab ===
+						class="flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors {tab ===
 						'password'
-							? 'bg-green-600 text-white'
-							: 'bg-gray-700/50 text-gray-400 hover:text-gray-200'}"
+							? 'bg-gold-500 text-canvas-950'
+							: 'text-ink-500 hover:text-ink-900'}"
 						onclick={() => {
 							tab = 'password';
 							errorMessage = '';
@@ -127,7 +123,7 @@
 						class="space-y-6"
 					>
 						<div>
-							<label for="oauthHandle" class="mb-2 block text-sm font-medium text-gray-300">
+							<label for="oauthHandle" class="text-ink-700 mb-2 block text-sm font-medium">
 								AT Protocol Handle
 							</label>
 							<input
@@ -136,35 +132,35 @@
 								bind:value={oauthHandle}
 								onkeydown={handleInputKeydown}
 								placeholder="alice.bsky.social"
-								class="w-full rounded-xl border border-gray-600/50 bg-gray-700/50 p-4 text-white placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
+								class="border-canvas-line bg-canvas-900 text-ink-950 placeholder-ink-500 focus:border-gold-500 focus:ring-gold-500/20 w-full rounded-md border p-4 transition-colors duration-200 focus:ring-2 focus:outline-none"
 								disabled={isLoading}
 								required
 							/>
-							<p class="mt-2 text-xs text-gray-400">
+							<p class="text-ink-500 mt-2 text-xs">
 								Sign in securely through your PDS — no password is ever shared with us.
 							</p>
 						</div>
 
 						{#if errorMessage}
-							<div class="rounded-xl border border-red-700/50 bg-red-900/50 p-4 backdrop-blur-sm">
-								<p class="text-sm text-red-200">{errorMessage}</p>
+							<div class="border-ember-500/40 bg-ember-500/10 rounded-md border p-4">
+								<p class="text-ember-400 text-sm">{errorMessage}</p>
 							</div>
 						{/if}
 
 						<button
 							type="submit"
 							disabled={isLoading || !oauthHandle}
-							class="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 font-bold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:from-green-700 hover:to-green-800 hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-700"
+							class="bg-gold-500 text-canvas-950 hover:bg-gold-400 disabled:bg-canvas-700 disabled:text-ink-500 flex w-full items-center justify-center space-x-2 rounded-md px-6 py-4 font-bold transition-colors duration-200 disabled:cursor-not-allowed"
 						>
 							{#if isLoading}
-								<div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-								<span>Redirecting...</span>
+								<div class="border-canvas-950 h-5 w-5 animate-spin rounded-full border-b-2"></div>
+								<span>Redirecting…</span>
 							{:else}
 								<span>Continue with ATProto →</span>
 							{/if}
 						</button>
 
-						<p class="text-center text-xs text-gray-400">
+						<p class="text-ink-500 text-center text-xs">
 							You'll be sent to your PDS to approve access, then returned here automatically.
 						</p>
 					</form>
@@ -178,7 +174,7 @@
 						class="space-y-6"
 					>
 						<div>
-							<label for="identifier" class="mb-2 block text-sm font-medium text-gray-300">
+							<label for="identifier" class="text-ink-700 mb-2 block text-sm font-medium">
 								AT Protocol Handle
 							</label>
 							<input
@@ -187,14 +183,14 @@
 								bind:value={identifier}
 								onkeydown={handleInputKeydown}
 								placeholder="alice.bsky.social"
-								class="w-full rounded-xl border border-gray-600/50 bg-gray-700/50 p-4 text-white placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
+								class="border-canvas-line bg-canvas-900 text-ink-950 placeholder-ink-500 focus:border-gold-500 focus:ring-gold-500/20 w-full rounded-md border p-4 transition-colors duration-200 focus:ring-2 focus:outline-none"
 								disabled={isLoading}
 								required
 							/>
 						</div>
 
 						<div>
-							<label for="password" class="mb-2 block text-sm font-medium text-gray-300">
+							<label for="password" class="text-ink-700 mb-2 block text-sm font-medium">
 								App Password
 							</label>
 							<input
@@ -203,29 +199,29 @@
 								bind:value={password}
 								onkeydown={handleInputKeydown}
 								placeholder="Your app password"
-								class="w-full rounded-xl border border-gray-600/50 bg-gray-700/50 p-4 text-white placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
+								class="border-canvas-line bg-canvas-900 text-ink-950 placeholder-ink-500 focus:border-gold-500 focus:ring-gold-500/20 w-full rounded-md border p-4 transition-colors duration-200 focus:ring-2 focus:outline-none"
 								disabled={isLoading}
 								required
 							/>
-							<p class="mt-2 text-xs text-gray-400">
+							<p class="text-ink-500 mt-2 text-xs">
 								Generate this in your Bluesky app settings or AT Protocol client.
 							</p>
 						</div>
 
 						{#if errorMessage}
-							<div class="rounded-xl border border-red-700/50 bg-red-900/50 p-4 backdrop-blur-sm">
-								<p class="text-sm text-red-200">{errorMessage}</p>
+							<div class="border-ember-500/40 bg-ember-500/10 rounded-md border p-4">
+								<p class="text-ember-400 text-sm">{errorMessage}</p>
 							</div>
 						{/if}
 
 						<button
 							type="submit"
 							disabled={isLoading || !identifier || !password}
-							class="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 font-bold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:from-green-700 hover:to-green-800 hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-700"
+							class="bg-gold-500 text-canvas-950 hover:bg-gold-400 disabled:bg-canvas-700 disabled:text-ink-500 flex w-full items-center justify-center space-x-2 rounded-md px-6 py-4 font-bold transition-colors duration-200 disabled:cursor-not-allowed"
 						>
 							{#if isLoading}
-								<div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-								<span>Connecting...</span>
+								<div class="border-canvas-950 h-5 w-5 animate-spin rounded-full border-b-2"></div>
+								<span>Connecting…</span>
 							{:else}
 								<span>Sign In with App Password</span>
 							{/if}
@@ -235,13 +231,13 @@
 
 				<!-- Sign Up Link -->
 				<div class="mt-6 text-center">
-					<p class="text-sm text-gray-400">
+					<p class="text-ink-500 text-sm">
 						Don't have an account?
 						<a
 							href="https://bsky.app"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="text-green-400 underline transition-colors duration-200 hover:text-green-300"
+							class="text-gold-400 hover:text-gold-300 underline transition-colors duration-200"
 						>
 							Sign up on Bluesky
 						</a>
@@ -251,9 +247,9 @@
 
 			<!-- Info Section -->
 			<div class="mt-8 text-center">
-				<details class="group text-sm text-gray-400">
+				<details class="group text-ink-500 text-sm">
 					<summary
-						class="mb-4 inline-flex cursor-pointer items-center space-x-2 transition-colors duration-200 hover:text-gray-300"
+						class="hover:text-ink-900 mb-4 inline-flex cursor-pointer items-center space-x-2 transition-colors duration-200"
 					>
 						<svg
 							class="h-4 w-4 transform transition-transform duration-200 group-open:rotate-90"
@@ -270,12 +266,10 @@
 						</svg>
 						<span>How does this work?</span>
 					</summary>
-					<div
-						class="space-y-3 rounded-xl border border-gray-700/30 bg-gray-800/50 p-6 backdrop-blur-sm"
-					>
+					<div class="border-canvas-line bg-canvas-800 space-y-3 rounded-md border p-6">
 						<div class="flex items-start space-x-3">
 							<svg
-								class="mt-0.5 h-5 w-5 flex-shrink-0 text-green-400"
+								class="text-gold-400 mt-0.5 h-5 w-5 flex-shrink-0"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -288,8 +282,8 @@
 								/>
 							</svg>
 							<div class="text-left">
-								<p class="font-medium text-gray-300">OAuth (Recommended)</p>
-								<p class="text-xs text-gray-400">
+								<p class="text-ink-700 font-medium">OAuth (Recommended)</p>
+								<p class="text-ink-500 text-xs">
 									Sign in through your PDS with granular permissions. We only request access to
 									write game scores.
 								</p>
@@ -297,7 +291,7 @@
 						</div>
 						<div class="flex items-start space-x-3">
 							<svg
-								class="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-400"
+								class="text-ember-400 mt-0.5 h-5 w-5 flex-shrink-0"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -310,8 +304,8 @@
 								/>
 							</svg>
 							<div class="text-left">
-								<p class="font-medium text-gray-300">App Password</p>
-								<p class="text-xs text-gray-400">
+								<p class="text-ink-700 font-medium">App Password</p>
+								<p class="text-ink-500 text-xs">
 									Use an app password for authentication. Note: this grants broader access than
 									OAuth.
 								</p>
