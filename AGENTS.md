@@ -4,7 +4,7 @@ Guidance for AI coding agents working in **atproto-snake**.
 
 ## Project overview
 
-a snake game integrated with ATproto
+A snake game integrated with ATproto
 
 - Language: TypeScript
 - Default branch: main
