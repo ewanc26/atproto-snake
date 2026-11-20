@@ -25,7 +25,7 @@ npm run dev
 
 - Keep game logic in `src/lib/snake/` and UI in components: the game should stay testable without a browser and a login.
 - Score submission writes to the player's own repo; test with a scratch account, and never log credentials.
-- Keep it dependency-light and dependency-light and quick to load: it's a small game and should stay one.
+- Keep it dependency-light and quick to load: it's a small game and should stay one.
 - Touch/mobile (swipe) and keyboard input are both first-class; changes to controls should hold both.
 
 ## Before opening a PR
