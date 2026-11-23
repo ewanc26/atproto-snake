@@ -56,3 +56,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and the checks required 
 ## Licence
 
 MIT
+
+Copyright (C) 2025-2026 Ewan Croft (ewanc26).
