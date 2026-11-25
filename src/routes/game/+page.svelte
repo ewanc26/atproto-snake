@@ -104,12 +104,12 @@
 			<div class="mt-6 max-w-md text-center">
 				<p class="text-ink-700 mb-2 text-lg">Use Arrow Keys or swipe to play!</p>
 				<div class="text-ink-500 flex flex-wrap justify-center gap-2 font-mono text-sm">
-					<span class="bg-canvas-800 border-canvas-line rounded-full border px-3 py-1"
-						>↑ ↓ ← → Arrow Keys</span
-					>
-					<span class="bg-canvas-800 border-canvas-line rounded-full border px-3 py-1"
-						>📱 Touch & Swipe</span
-					>
+					<span class="bg-canvas-800 border-canvas-line rounded-full border px-3 py-1">
+						↑ ↓ ← → Arrow Keys
+					</span>
+					<span class="bg-canvas-800 border-canvas-line rounded-full border px-3 py-1">
+						📱 Touch & Swipe
+					</span>
 				</div>
 			</div>
 		{/if}
