@@ -29,7 +29,6 @@
 		"package-lock.json",
 		"tsconfig.json",
 		"vite.config.ts",
-		"svelte.config.js",
 		"README.md"
 	],
 	"dictionaries": ["typescript", "css", "html", "markdown", "node"]

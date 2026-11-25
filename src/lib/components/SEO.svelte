@@ -3,12 +3,14 @@
 	// Restores original metadata when the component unmounts so page changes
 	// in a SPA don't leave stale tags behind.
 	import { onMount, onDestroy } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
-	export let title: string = 'ATProto Snake Game';
-	export let description: string = 'A classic Snake game built with SvelteKit and ATProto.';
-	export let keywords: string = 'snake, game, svelte, sveltekit, atproto, web game';
-	export let ogImage: string = 'https://ewancroft.uk/embed/main.png'; // Default Open Graph image
+	let {
+		title = 'ATProto Snake Game',
+		description = 'A classic Snake game built with SvelteKit and ATProto.',
+		keywords = 'snake, game, svelte, sveltekit, atproto, web game',
+		ogImage = 'https://ewancroft.uk/embed/main.png' // Default Open Graph image
+	}: { title?: string; description?: string; keywords?: string; ogImage?: string } = $props();
 
 	let originalTitle: string;
 	let originalDescription: HTMLMetaElement | null;
@@ -25,14 +27,11 @@
 		updateMetadata();
 	});
 
-	// Reactively update metadata when props or page store changes
-	$: {
-		(title, description, keywords, ogImage, $page.url.pathname); // Trigger update on path change
-		// Only update metadata in the browser
-		if (typeof document !== 'undefined') {
-			updateMetadata();
-		}
-	}
+	// Reactively update metadata when props or the current path change
+	$effect(() => {
+		void page.url.pathname; // Trigger update on path change
+		updateMetadata();
+	});
 
 	/**
 	 * Updates the document's metadata (title, description, keywords, Open Graph image).
