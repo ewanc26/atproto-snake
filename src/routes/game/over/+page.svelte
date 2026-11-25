@@ -2,17 +2,12 @@
 	// Game-over route — reads the score from the URL query param
 	// and renders the GameOverOverlay with play-again / logout actions.
 	import GameOverOverlay from '$lib/components/GameOverOverlay.svelte';
-	import { getStores } from '$app/stores';
-	const { page } = getStores();
+	import { page } from '$app/state';
 
-	let score: number = 0;
-
-	$: {
-		const scoreParam = $page.url.searchParams.get('score');
-		if (scoreParam) {
-			score = parseInt(scoreParam, 10);
-		}
-	}
+	const score = $derived.by(() => {
+		const scoreParam = page.url.searchParams.get('score');
+		return scoreParam ? parseInt(scoreParam, 10) : 0;
+	});
 </script>
 
 <div class="bg-canvas-950 text-ink-900 flex min-h-screen flex-col">
